@@ -1,15 +1,12 @@
 """PATRÓN FACTORY: create_app arma la aplicación; los tests le inyectan un repositorio falso."""
-import os
-from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
-
-load_dotenv()
+from config.config import Config
 
 
 def create_app(turno_repo=None):
     app = Flask(__name__)
-    CORS(app, origins=[os.getenv("CORS_ORIGIN", "http://localhost:3000")])
+    CORS(app, origins=[Config.CORS_ORIGIN])
     if turno_repo is None:
         from repositories.turno_repository import TurnoRepository
         turno_repo = TurnoRepository()

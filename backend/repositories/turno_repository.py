@@ -1,6 +1,6 @@
 """PATRÓN REPOSITORY: único lugar con SQL para turnos.
 Todas las consultas usan parámetros (%s): nunca se arma SQL concatenando datos del usuario."""
-from config.db import get_connection
+from models.db import get_connection
 
 COLUMNAS_EDITABLES = {"estado", "fecha_hora"}
 
