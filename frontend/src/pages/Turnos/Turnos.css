@@ -1,0 +1,21 @@
+/* Letra grande y alto contraste: el público son adultos mayores (encuesta: 47% con dificultad visual). */
+.turnos { max-width: 640px; margin: 0 auto; padding: 24px 16px; font-size: 1.25rem; color: #0b1f4d; }
+.turnos h1 { font-size: 2rem; margin: 0 0 20px; }
+.turnos label { display: block; margin: 20px 0 6px; font-weight: 700; }
+.turnos select, .turnos textarea { width: 100%; font-size: 1.15rem; padding: 12px; border: 2px solid #0b1f4d; border-radius: 8px; background: #fff; color: inherit; }
+.turnos textarea { min-height: 96px; }
+.btn { display: block; width: 100%; margin-top: 20px; padding: 16px; font-size: 1.25rem; font-weight: 700; color: #fff; background: #0b3fa8; border: 2px solid #0b3fa8; border-radius: 10px; cursor: pointer; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, .turnos select:focus-visible, .turnos textarea:focus-visible { outline: 4px solid #f2b300; outline-offset: 2px; }
+.btn-voz { margin-top: 0; padding: 22px; font-size: 1.4rem; }
+.btn-secundario { background: #fff; color: #0b3fa8; }
+.separador { text-align: center; margin: 24px 0 0; }
+.turno { border: 2px solid #0b1f4d; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.turno h2 { margin: 0 0 6px; font-size: 1.4rem; text-transform: capitalize; }
+.estado { font-weight: 700; margin: 4px 0; }
+.estado-propuesto { color: #8a5a00; }
+.estado-confirmado { color: #0a6b2a; }
+.estado-rechazado { color: #a11212; }
+.acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.msg-ok { color: #0a6b2a; font-weight: 700; }
+.msg-error { color: #a11212; font-weight: 700; }
