@@ -1,15 +1,11 @@
-"""Lee las variables del archivo .env (ver .env.example)."""
-import os
 from dotenv import load_dotenv
-
+import os
 load_dotenv()
 
+password=os.getenv("MYSQL_PASSWORD")
+user= os.getenv("MYSQL_USER")
+database= os.getenv("MYSQL_DATABASE")
+port= os.getenv("MYSQL_PORT")
+host= os.getenv("MYSQL_HOST")
 
-class Config:
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_PORT = int(os.getenv("DB_PORT", "3306"))
-    DB_USER = os.getenv("DB_USER", "root")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-    DB_NAME = os.getenv("DB_NAME", "mi_turno_a_mano")
-    JWT_SECRET = os.getenv("JWT_SECRET", "")
-    CORS_ORIGIN = os.getenv("CORS_ORIGIN", "http://localhost:3000")
+DATABASE_CONNECTION_URI = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
