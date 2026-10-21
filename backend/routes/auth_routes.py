@@ -17,7 +17,15 @@ logger = logging.getLogger(__name__)
 MAX_INTENTOS = 5
 MINUTOS_BLOQUEO = 15
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-CAMPOS = ("nombre", "telefono", "email", "identificador", "password")
+CAMPOS = ("nombre", "telefono", "email", "identificador", "password", "rol")
+
+# Cada rol valida su identificador con un formato distinto.
+# Ajustá los rangos si tu institución usa otro criterio.
+VALIDACIONES_IDENTIFICADOR = {
+    "paciente": (re.compile(r"^[0-9]{7,8}$"), "El DNI debe tener 7 u 8 dígitos"),
+    "medico": (re.compile(r"^[0-9]{4,6}$"), "La matrícula debe tener entre 4 y 6 dígitos"),
+    "administrativo": (re.compile(r"^[0-9]{3,6}$"), "El legajo debe tener entre 3 y 6 dígitos"),
+}
 
 
 def ahora_utc():
@@ -31,16 +39,23 @@ def validar_registro(datos):
     limpios = {}
     for campo in CAMPOS:
         valor = datos.get(campo)
-        # solo texto: evita que lleguen objetos raros a la consulta
         if not isinstance(valor, str) or not valor.strip():
             return None, f"'{campo}' es obligatorio y debe ser texto"
         limpios[campo] = valor if campo == "password" else valor.strip()
+
     if not EMAIL_RE.match(limpios["email"]):
         return None, "El email no es válido"
-    if not re.fullmatch(r"[0-9]{7,8}", limpios["identificador"]):
-        return None, "El DNI debe tener 7 u 8 dígitos"
+
+    if limpios["rol"] not in Usuario.ROLES:
+        return None, "El rol debe ser paciente, medico o administrativo"
+
+    patron, mensaje_error = VALIDACIONES_IDENTIFICADOR[limpios["rol"]]
+    if not patron.fullmatch(limpios["identificador"]):
+        return None, mensaje_error
+
     if len(limpios["password"]) < 8:
         return None, "La contraseña debe tener al menos 8 caracteres"
+
     return limpios, None
 
 
@@ -50,22 +65,22 @@ def registro():
     if error:
         return jsonify(error=error), 400
 
-    # el rol lo fija el servidor: el registro público es solo de pacientes
     usuario = Usuario(
         nombre=datos["nombre"],
         telefono=datos["telefono"],
         email=datos["email"],
         identificador=datos["identificador"],
         password_hash=generate_password_hash(datos["password"]),
-        rol="paciente",
+        rol=datos["rol"],
     )
     db.session.add(usuario)
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        return jsonify(error="Ya existe un usuario con ese DNI o email"), 409
-    return jsonify(id=usuario.id, rol=usuario.rol), 201
+        return jsonify(error="Ya existe un usuario con ese identificador o email"), 409
+
+    return jsonify(mensaje="Registro exitoso", usuario=usuario.serialize()), 201
 
 
 @auth_bp.post("/login")
@@ -92,9 +107,7 @@ def login():
                 usuario.intentos_fallidos = 0
                 usuario.bloqueado_hasta = ahora + timedelta(minutes=MINUTOS_BLOQUEO)
             db.session.commit()
-        # se registra el intento sin la contraseña y con el DNI enmascarado
         logger.warning("Login fallido (identificador terminado en %s)", identificador[-3:])
-        # mismo mensaje si el DNI no existe o la contraseña está mal
         return jsonify(error="Credenciales inválidas"), 401
 
     usuario.intentos_fallidos = 0
@@ -104,18 +117,22 @@ def login():
         identity=str(usuario.id),
         additional_claims={"rol": usuario.rol},
     )
-    return jsonify(token=token, rol=usuario.rol, nombre=usuario.nombre), 200
+    return jsonify(token=token, usuario=usuario.serialize()), 200
 
 
 @auth_bp.get("/yo")
 @jwt_required()
 def yo():
-    return jsonify(id=get_jwt_identity(), rol=get_jwt()["rol"])
+    usuario = Usuario.query.get(get_jwt_identity())
+    if not usuario:
+        return jsonify(error="Usuario no encontrado"), 404
+    return jsonify(usuario.serialize())
 
 
-# Endpoint temporal para probar la restricción por rol; se borra cuando
-# estén los endpoints reales de turnos (MTAM-2).
-@auth_bp.get("/panel-administrativo")
-@roles_requeridos("administrativo")
-def panel_administrativo():
-    return jsonify(mensaje="Acceso permitido")
+# Endpoint de ejemplo para probar la restricción por rol (caso de prueba
+# sugerido N°3 del integrador). Se puede borrar cuando estén los endpoints
+# reales de turnos.
+@auth_bp.get("/panel-medico")
+@roles_requeridos("medico")
+def panel_medico():
+    return jsonify(mensaje="Acceso permitido: sos médico")
