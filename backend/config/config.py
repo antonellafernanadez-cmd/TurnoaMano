@@ -13,3 +13,10 @@ class Config:
     DB_NAME = os.getenv("DB_NAME", "mi_turno_a_mano")
     JWT_SECRET = os.getenv("JWT_SECRET", "")
     CORS_ORIGIN = os.getenv("CORS_ORIGIN", "http://localhost:3000")
+
+    SECRET_KEY = os.getenv("SECRET_KEY", "")
+    DATABASE_CONNECTION_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        # WhatsApp (opcional): si falta alguna de estas tres, el canal queda desactivado.
+    TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "")
+    TWILIO_WHATSAPP_FROM = os.getenv("TWILIO_WHATSAPP_FROM", "")
