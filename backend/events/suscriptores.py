@@ -7,8 +7,9 @@ import logging
 from flask import current_app
 
 from events.bus import bus
-from models.notificacion import FECHA_PROPUESTA
+from models.notificacion import CAMBIO, FECHA_PROPUESTA
 from utils.formato import fecha_legible
+from utils.mensajes import mensaje_reprogramado, mensaje_suspendido
 
 log = logging.getLogger("notificaciones")
 
@@ -26,4 +27,23 @@ def al_proponer_fecha(turno_id, **_):
         log.warning("no se pudo avisar turno=%s motivo=%s", turno_id, type(e).__name__)
 
 
+def _avisar_cambio(turno_id, armar_mensaje):
+    """Aviso de cambio (historia de usuario 4). Si falla, el cambio del turno igual se guarda."""
+    try:
+        turno = current_app.config["TURNO_REPO"].obtener(turno_id)
+        current_app.config["NOTIFICADOR"].avisar(turno["paciente_id"], turno_id, CAMBIO, armar_mensaje(turno))
+    except Exception as e:
+        log.warning("no se pudo avisar turno=%s motivo=%s", turno_id, type(e).__name__)
+
+
+def al_reprogramar(turno_id, **_):
+    _avisar_cambio(turno_id, mensaje_reprogramado)
+
+
+def al_cancelar(turno_id, **_):
+    _avisar_cambio(turno_id, mensaje_suspendido)
+
+
 bus.suscribir("turno.propuesto", al_proponer_fecha)
+bus.suscribir("turno.reprogramado", al_reprogramar)
+bus.suscribir("turno.cancelado", al_cancelar)
