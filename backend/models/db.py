@@ -1,3 +1,5 @@
+from flask_sqlalchemy import SQLAlchemy
+db=SQLAlchemy()
 """Conexión a MySQL con PyMySQL. Los datos de conexión vienen de config/config.py (.env)."""
 import pymysql
 from pymysql.cursors import DictCursor

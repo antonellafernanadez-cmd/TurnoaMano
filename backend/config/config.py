@@ -13,3 +13,6 @@ class Config:
     DB_NAME = os.getenv("DB_NAME", "mi_turno_a_mano")
     JWT_SECRET = os.getenv("JWT_SECRET", "")
     CORS_ORIGIN = os.getenv("CORS_ORIGIN", "http://localhost:3000")
+
+    SECRET_KEY = os.getenv("SECRET_KEY", "")
+    DATABASE_CONNECTION_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
