@@ -16,14 +16,11 @@ logger = logging.getLogger(__name__)
 MAX_INTENTOS = 5
 MINUTOS_BLOQUEO = 15
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-CAMPOS = ("nombre", "telefono", "email", "identificador", "password", "rol")
+CAMPOS = ("nombre", "telefono", "email", "identificador", "password")
 
-# Cada rol valida su identificador con un formato distinto.
-VALIDACIONES_IDENTIFICADOR = {
-    "paciente": (re.compile(r"^[0-9]{7,8}$"), "El DNI debe tener 7 u 8 dígitos"),
-    "medico": (re.compile(r"^[0-9]{4,6}$"), "La matrícula debe tener entre 4 y 6 dígitos"),
-    "administrativo": (re.compile(r"^[0-9]{3,6}$"), "El legajo debe tener entre 3 y 6 dígitos"),
-}
+# Solo los pacientes se registran desde la app, y lo hacen con su DNI.
+# El médico y el administrativo ya vienen cargados en la base de datos.
+PATRON_DNI = re.compile(r"^[0-9]{7,8}$")
 
 
 def ahora_utc():
@@ -44,12 +41,8 @@ def _validar_registro(datos):
     if not EMAIL_RE.match(limpios["email"]):
         return None, "El email no es válido"
 
-    if limpios["rol"] not in Usuario.ROLES:
-        return None, "El rol debe ser paciente, medico o administrativo"
-
-    patron, mensaje_error = VALIDACIONES_IDENTIFICADOR[limpios["rol"]]
-    if not patron.fullmatch(limpios["identificador"]):
-        return None, mensaje_error
+    if not PATRON_DNI.fullmatch(limpios["identificador"]):
+        return None, "El DNI debe tener 7 u 8 dígitos"
 
     if len(limpios["password"]) < 8:
         return None, "La contraseña debe tener al menos 8 caracteres"
@@ -58,7 +51,13 @@ def _validar_registro(datos):
 
 
 def registro():
-    datos, msg = _validar_registro(request.get_json(silent=True))
+    cuerpo = request.get_json(silent=True)
+    # Nadie puede elegir su rol: un cliente que intente registrarse como médico o
+    # administrativo es rechazado (403). Si no manda "rol", es paciente.
+    if isinstance(cuerpo, dict) and cuerpo.get("rol", "paciente") != "paciente":
+        return error("Solo los pacientes pueden registrarse desde la app", 403)
+
+    datos, msg = _validar_registro(cuerpo)
     if msg:
         return error(msg, 400)
 
@@ -68,7 +67,7 @@ def registro():
         email=datos["email"],
         identificador=datos["identificador"],
         password_hash=generate_password_hash(datos["password"]),
-        rol=datos["rol"],
+        rol="paciente",
     )
     db.session.add(usuario)
     try:
