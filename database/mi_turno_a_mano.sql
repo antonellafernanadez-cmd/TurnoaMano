@@ -45,3 +45,8 @@ INSERT INTO usuarios (nombre, telefono, email, identificador, password_hash, rol
    'scrypt:32768:8:1$PTMdxVFfVru97vPI$8f1248309c2e7ece9eb7ffd8f8874778419cc7f7de971f25e8f3022083d3c3ec2057ab8d65e859ed20e92fb6e283ab1495329b16963c08246ecd81b8d5dfc4e6', 'administrativo'),
   ('Médico Prueba', '2610000002', 'medico@miturnoamano.com', '2001',
    'scrypt:32768:8:1$tl1mQ2xC2VWkCXZp$c3ad7274eb1ac83aa0cdca525cbb39feb50ddbefd720ea4b2828b22bac4aaca617fe633dec1f9d49bb0a48c57b7e4bde830594161067f55968bb7918a55e1760', 'medico');
+
+-- Relación: cada turno pertenece a un paciente registrado (paciente_id = DNI del usuario).
+ALTER TABLE turnos
+  ADD CONSTRAINT fk_turno_paciente
+  FOREIGN KEY (paciente_id) REFERENCES usuarios(identificador);
