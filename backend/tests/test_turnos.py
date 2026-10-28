@@ -4,6 +4,7 @@ import jwt, pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.environ["JWT_SECRET"] = "secreto-de-prueba-de-32-caracteres-min"
+os.environ["SECRET_KEY"] = "secreto-de-prueba-de-32-caracteres-min"
 
 from app import create_app
 from strategies.solicitud import SolicitudPorVoz
