@@ -1,13 +1,28 @@
 import { useState } from "react";
 import SolicitarTurno from "./pages/Turnos/SolicitarTurno";
 import MisTurnos from "./pages/Turnos/MisTurnos";
+import Login from "./pages/Auth/Login";
+import Registro from "./pages/Auth/Registro";
 import "./App.css";
 
-// Navegación simple entre las dos pantallas del paciente.
-// Cuando esté el login, se reemplaza por las rutas protegidas según el rol.
 export default function App() {
   const [pantalla, setPantalla] = useState("nuevo");
-  const sinToken = !localStorage.getItem("token");
+  const [autenticado, setAutenticado] = useState(!!localStorage.getItem("token"));
+  const [vistaAuth, setVistaAuth] = useState("login");
+
+  const cerrarSesion = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    setAutenticado(false);
+  };
+
+  if (!autenticado) {
+    return vistaAuth === "login" ? (
+      <Login onLogin={() => setAutenticado(true)} irARegistro={() => setVistaAuth("registro")} />
+    ) : (
+      <Registro onRegistrado={() => setVistaAuth("login")} irALogin={() => setVistaAuth("login")} />
+    );
+  }
 
   return (
     <>
@@ -18,12 +33,10 @@ export default function App() {
         <button className={pantalla === "mios" ? "activo" : ""} onClick={() => setPantalla("mios")}>
           Mis turnos
         </button>
+        <button className="salir" onClick={cerrarSesion}>
+          Cerrar sesión
+        </button>
       </nav>
-      {sinToken && (
-        <p className="aviso">
-          Todavía no hay sesión iniciada. Guardá un token de prueba con localStorage.setItem("token", "...") y recargá.
-        </p>
-      )}
       {pantalla === "nuevo" ? <SolicitarTurno /> : <MisTurnos />}
     </>
   );

@@ -16,14 +16,10 @@ logger = logging.getLogger(__name__)
 MAX_INTENTOS = 5
 MINUTOS_BLOQUEO = 15
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-CAMPOS = ("nombre", "telefono", "email", "identificador", "password", "rol")
-
-# Cada rol valida su identificador con un formato distinto.
-VALIDACIONES_IDENTIFICADOR = {
-    "paciente": (re.compile(r"^[0-9]{7,8}$"), "El DNI debe tener 7 u 8 dígitos"),
-    "medico": (re.compile(r"^[0-9]{4,6}$"), "La matrícula debe tener entre 4 y 6 dígitos"),
-    "administrativo": (re.compile(r"^[0-9]{3,6}$"), "El legajo debe tener entre 3 y 6 dígitos"),
-}
+DNI_RE = re.compile(r"^[0-9]{7,8}$")
+# Solo el paciente se registra desde la app. Médico y administrativo se
+# cargan con database/init_db.py (ver ese archivo).
+CAMPOS = ("nombre", "telefono", "email", "identificador", "password")
 
 
 def ahora_utc():
@@ -44,12 +40,8 @@ def _validar_registro(datos):
     if not EMAIL_RE.match(limpios["email"]):
         return None, "El email no es válido"
 
-    if limpios["rol"] not in Usuario.ROLES:
-        return None, "El rol debe ser paciente, medico o administrativo"
-
-    patron, mensaje_error = VALIDACIONES_IDENTIFICADOR[limpios["rol"]]
-    if not patron.fullmatch(limpios["identificador"]):
-        return None, mensaje_error
+    if not DNI_RE.fullmatch(limpios["identificador"]):
+        return None, "El DNI debe tener 7 u 8 dígitos"
 
     if len(limpios["password"]) < 8:
         return None, "La contraseña debe tener al menos 8 caracteres"
@@ -68,7 +60,7 @@ def registro():
         email=datos["email"],
         identificador=datos["identificador"],
         password_hash=generate_password_hash(datos["password"]),
-        rol=datos["rol"],
+        rol="paciente",
     )
     db.session.add(usuario)
     try:

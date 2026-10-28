@@ -4,3 +4,4 @@ body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: #f
 .menu button.activo { color: #fff; background: #0b3fa8; }
 .menu button:focus-visible { outline: 4px solid #f2b300; outline-offset: 2px; }
 .aviso { max-width: 640px; margin: 12px auto 0; padding: 0 16px; color: #8a5a00; font-weight: 700; }
+.menu .salir { grid-column: 1 / -1; margin-top: 4px; background: #fff; color: #a11212; border-color: #a11212; }
