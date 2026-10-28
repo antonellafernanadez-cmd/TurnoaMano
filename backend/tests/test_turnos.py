@@ -8,7 +8,7 @@ os.environ["SECRET_KEY"] = "secreto-de-prueba-de-32-caracteres-min"
 
 from app import create_app
 from strategies.solicitud import SolicitudPorVoz
-from tests.fake_repo import FakeTurnoRepository
+from tests.fake_repo import FakeNotificacionRepository, FakeTurnoRepository
 from utils.errores import ApiError
 
 
@@ -18,7 +18,8 @@ def token(uid, rol):
 
 @pytest.fixture
 def client():
-    return create_app(turno_repo=FakeTurnoRepository()).test_client()
+    return create_app(turno_repo=FakeTurnoRepository(), notificacion_repo=FakeNotificacionRepository(),
+                      destinatarios=lambda paciente_id: None, canales_extra=[]).test_client()
 
 
 # ---- unitarias ----
