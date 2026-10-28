@@ -110,14 +110,14 @@ def login():
     usuario.bloqueado_hasta = None
     db.session.commit()
     token = create_access_token(
-        identity=str(usuario.id),
+        identity=usuario.identificador,
         additional_claims={"rol": usuario.rol},
     )
     return jsonify({"token": token, "usuario": usuario.serialize()}), 200
 
 
 def yo():
-    usuario = db.session.get(Usuario, get_jwt_identity())
+    usuario = Usuario.query.filter_by(identificador=get_jwt_identity()).first()
     if not usuario:
         return error("Usuario no encontrado", 404)
     return jsonify(usuario.serialize()), 200
