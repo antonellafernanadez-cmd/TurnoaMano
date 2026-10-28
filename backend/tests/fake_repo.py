@@ -18,8 +18,15 @@ class FakeTurnoRepository:
     def listar_por_paciente(self, paciente_id):
         return [dict(f) for f in self._filas.values() if f["paciente_id"] == paciente_id]
 
-    def listar(self, estado=None):
-        return [dict(f) for f in self._filas.values() if not estado or f["estado"] == estado]
+    def listar(self, estado=None, medico_id=None, fecha=None):
+        filas = [dict(f) for f in self._filas.values()]
+        if estado:
+            filas = [f for f in filas if f["estado"] == estado]
+        if medico_id:
+            filas = [f for f in filas if f.get("medico_id") == medico_id]
+        if fecha:
+            filas = [f for f in filas if f["fecha_hora"] and f["fecha_hora"].date().isoformat() == fecha]
+        return filas
 
     def actualizar(self, turno_id, campos):
         self._filas[turno_id].update(campos)
