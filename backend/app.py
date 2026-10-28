@@ -61,9 +61,11 @@ def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, cana
                                             destinatarios or _buscar_destinatario)
 
     from events import suscriptores  # noqa: F401  (registra los avisos automáticos en el bus de eventos)
+    from routes.notificacion_routes import notificaciones_bp
     from routes.turno_routes import turnos_bp
     from utils.errores import registrar_errores
     app.register_blueprint(turnos_bp)
+    app.register_blueprint(notificaciones_bp)
     registrar_errores(app)
 
     @app.get("/api/health")
