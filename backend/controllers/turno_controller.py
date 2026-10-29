@@ -35,6 +35,11 @@ def crear_turno(usuario, datos):
     especialidad, motivo = estrategia.interpretar(datos)
     if not isinstance(motivo, str) or len(motivo) > 300:
         raise ApiError("El motivo debe ser texto de hasta 300 caracteres.", 400)
+    # Evita pedidos duplicados (doble toque, voz repetida): si ya tiene uno de esa especialidad
+    # esperando fecha o respuesta, no se crea otro.
+    for existente in _repo().listar_por_paciente(usuario["id"]):
+        if existente["especialidad"] == especialidad and existente["estado"] in (T.SOLICITADO, T.PROPUESTO):
+            raise ApiError("Ya tenés un pedido de esa especialidad en curso. Esperá a que te avisemos.", 409)
     doc = _repo().crear(T.nuevo_turno(usuario["id"], especialidad, motivo.strip(), estrategia.origen))
     bus.publicar("turno.solicitado", turno_id=doc["id"], estado=T.SOLICITADO)
     return T.turno_a_json(doc)

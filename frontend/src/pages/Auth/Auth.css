@@ -18,3 +18,8 @@
 .btn-secundario { background: #fff; color: #0b3fa8; }
 .msg-ok { color: #0a6b2a; font-weight: 700; margin-top: 16px; }
 .msg-error { color: #a11212; font-weight: 700; margin-top: 16px; }
+.link-volver {
+  display: block; margin: 20px auto 0; background: none; border: none;
+  color: #0b3fa8; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+.link-volver:focus-visible { outline: 3px solid #f2b300; outline-offset: 2px; }

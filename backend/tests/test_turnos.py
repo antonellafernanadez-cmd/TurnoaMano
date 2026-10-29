@@ -64,3 +64,14 @@ def test_validaciones(client):
     assert client.post("/api/turnos", json={"modo": "manual", "especialidad": "magia"}, headers=h).status_code == 400
     assert client.post("/api/turnos", json={"modo": "manual", "especialidad": "cardiologia", "motivo": "x" * 301},
                        headers=h).status_code == 400
+
+
+def test_no_se_repite_un_pedido_en_curso_de_la_misma_especialidad(client):
+    h = token("12345678", "paciente")
+    pedido = {"modo": "manual", "especialidad": "cardiologia"}
+    assert client.post("/api/turnos", json=pedido, headers=h).status_code == 201
+    assert client.post("/api/turnos", json=pedido, headers=h).status_code == 409      # duplicado
+    otra = {"modo": "manual", "especialidad": "neurologia"}
+    assert client.post("/api/turnos", json=otra, headers=h).status_code == 201        # otra especialidad: sí
+    otro_paciente = token("87654321", "paciente")
+    assert client.post("/api/turnos", json=pedido, headers=otro_paciente).status_code == 201  # otro paciente: sí

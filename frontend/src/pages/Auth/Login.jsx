@@ -62,6 +62,9 @@ export default function Login({ onLogin, irARegistro }) {
       <button type="button" className="btn btn-secundario" onClick={irARegistro}>
         ¿No tenés cuenta? Registrate
       </button>
+      <button type="button" className="link-volver" onClick={volver}>
+        ← Volver
+      </button>
     </main>
   );
 }

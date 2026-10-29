@@ -67,6 +67,9 @@ export default function Registro({ onRegistrado, irALogin }) {
       <button type="button" className="btn btn-secundario" onClick={irALogin}>
         Ya tengo cuenta
       </button>
+      <button type="button" className="link-volver" onClick={volver}>
+        ← Volver
+      </button>
     </main>
   );
 }
