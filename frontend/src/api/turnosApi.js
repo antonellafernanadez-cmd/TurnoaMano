@@ -9,3 +9,5 @@ export const disponibilidadTurnos = (especialidad) =>
 export const especialidadPorVoz = (transcripcion) =>
   client.post("/turnos/interpretar-voz", { transcripcion }).then((r) => r.data);
 export const cancelarTurno = (id) => client.patch(`/turnos/${id}/cancelar`).then((r) => r.data);
+export const obtenerAvisos = () => client.get("/notificaciones/mias").then((r) => r.data);
+export const marcarAvisoLeido = (id) => client.patch(`/notificaciones/${id}/leida`).then((r) => r.data);

@@ -2,7 +2,7 @@ import Logo from "../../components/Logo";
 import "./Inicio.css";
 
 // Pantalla principal del paciente: saludo y accesos grandes a lo que más usa.
-export default function Inicio({ nombre, irA, onSalir }) {
+export default function Inicio({ nombre, irA, onSalir, sinLeer = 0 }) {
   return (
     <main className="inicio">
       <header className="inicio-marca">
@@ -31,6 +31,16 @@ export default function Inicio({ nombre, irA, onSalir }) {
       <button type="button" className="banda banda-verde" onClick={() => irA("pedir")}>
         <span className="banda-icono" aria-hidden="true">🎤</span>
         <span>También podés pedir tu turno<br />por voz</span>
+        <span className="banda-flecha" aria-hidden="true">›</span>
+      </button>
+
+      <button type="button" className="banda banda-violeta" onClick={() => irA("avisos")}>
+        <span className="banda-icono" aria-hidden="true">🔔</span>
+        <span>
+          Recordatorios
+          {sinLeer > 0 && <span className="insignia" aria-label={`${sinLeer} sin leer`}>{sinLeer}</span>}
+          <br /><small className="banda-chico">Recibí avisos de tus turnos</small>
+        </span>
         <span className="banda-flecha" aria-hidden="true">›</span>
       </button>
 
