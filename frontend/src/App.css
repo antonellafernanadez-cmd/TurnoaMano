@@ -13,7 +13,7 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--fondo); color: var(--azul-oscuro); font-size: 18px; }
+body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--fondo); color: var(--azul-oscuro); font-size: 1.125rem; }
 button, input, select, textarea { font-family: inherit; }
 
 /* Contenedor de cada pantalla: angosto y centrado, como en un celular */
@@ -43,3 +43,8 @@ button, input, select, textarea { font-family: inherit; }
 .cabecera-titulo { margin: 0; font-size: 1.4rem; font-weight: 700; }
 .cabecera-volver { min-width: 44px; min-height: 44px; font-size: 1.6rem; color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 12px; cursor: pointer; }
 .cabecera-volver:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+/* Responsive: la letra y el ancho crecen de forma gradual con la pantalla.
+   Celular (~360px): tamaño normal. Tablet y compu: más grande y más ancho, sin saltos. */
+html { font-size: clamp(16px, 0.9vw + 12px, 22px); }
+.pantalla, .inicio, .auth { max-width: 32rem; }
+.bienvenida-contenido { max-width: 28rem; }
