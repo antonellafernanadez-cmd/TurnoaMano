@@ -11,14 +11,20 @@ from routes.auth_routes import auth_bp
 
 
 def _buscar_destinatario(paciente_id):
-    """Datos del paciente que necesitan los canales de aviso (se leen de la tabla usuarios).
-    Se busca por id (clave primaria), no por DNI."""
+    """Busca al paciente por identificador (DNI), que es lo que guardan los turnos."""
     from models.usuario import Usuario
-    usuario = db.session.get(Usuario, paciente_id)
+
+    usuario = Usuario.query.filter_by(
+        identificador=paciente_id
+    ).first()
+
     if not usuario:
         return None
-    return {"identificador": usuario.identificador, "telefono": usuario.telefono}
 
+    return {
+        "identificador": usuario.identificador,
+        "telefono": usuario.telefono
+    }
 
 def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, canales_extra=None):
     """PATRÓN FACTORY: create_app arma la aplicación; los tests le inyectan

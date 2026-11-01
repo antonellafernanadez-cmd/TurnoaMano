@@ -7,11 +7,37 @@ import logging
 from flask import current_app
 
 from events.bus import bus
-from models.notificacion import CAMBIO, FECHA_PROPUESTA
+from models.notificacion import CAMBIO, CONFIRMACION, FECHA_PROPUESTA
 from utils.formato import fecha_legible
 
 log = logging.getLogger("notificaciones")
 
+def al_confirmar(turno_id, **_):
+    """Avisa al paciente cuando su turno queda confirmado."""
+    try:
+        turno = current_app.config["TURNO_REPO"].obtener(turno_id)
+
+        if not turno:
+            return
+
+        mensaje = (
+            f"Tu turno de {turno['especialidad']} quedó confirmado para el "
+            f"{fecha_legible(turno['fecha_hora'])}."
+        )
+
+        current_app.config["NOTIFICADOR"].avisar(
+            turno["paciente_id"],
+            turno_id,
+            CONFIRMACION,
+            mensaje
+        )
+
+    except Exception as e:
+        log.warning(
+            "no se pudo confirmar aviso turno=%s motivo=%s",
+            turno_id,
+            type(e).__name__
+        )
 
 def al_proponer_fecha(turno_id, **_):
     """El administrativo propuso fecha y hora: se le avisa al paciente (historia de usuario 2).
@@ -54,3 +80,4 @@ def al_cancelar(turno_id, por=None, **_):
 bus.suscribir("turno.propuesto", al_proponer_fecha)
 bus.suscribir("turno.reprogramado", al_reprogramar)
 bus.suscribir("turno.cancelado", al_cancelar)
+bus.suscribir("turno.confirmado", al_confirmar)
