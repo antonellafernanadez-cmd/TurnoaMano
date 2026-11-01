@@ -19,7 +19,9 @@ export default function Login({ onLogin, irARegistro, volver }) {
     try {
       const resultado = await iniciarSesion({ identificador, password });
       localStorage.setItem("token", resultado.token);
-      localStorage.setItem("usuario", JSON.stringify(resultado.usuario));
+      // El backend puede mandar el usuario anidado o suelto: se guarda igual en los dos casos.
+      const usuario = resultado.usuario ?? { rol: resultado.rol, nombre: resultado.nombre };
+      localStorage.setItem("usuario", JSON.stringify(usuario));
       onLogin();
     } catch (err) {
       setMensaje({ ok: false, texto: err.response?.data?.error || "No pudimos iniciar sesión. Revisá tu conexión." });

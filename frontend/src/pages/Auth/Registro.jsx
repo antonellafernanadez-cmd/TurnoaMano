@@ -40,8 +40,8 @@ export default function Registro({ onRegistrado, irALogin, volver }) {
           <input id="nombre" type="text" autoComplete="name" value={form.nombre} onChange={cambiar("nombre")} required />
 
           <label htmlFor="telefono">Teléfono</label>
-          <input id="telefono" type="tel" autoComplete="tel" value={form.telefono} onChange={cambiar("telefono")} required />
-          <p className="ayuda">Te vamos a avisar por acá cuando tengas turno.</p>
+          <input id="telefono" type="tel" autoComplete="tel" placeholder="+5492611234567" value={form.telefono} onChange={cambiar("telefono")} required />
+          <p className="ayuda">Te vamos a avisar por acá y por WhatsApp. Escribilo con código de país, por ejemplo +5492611234567.</p>
 
           <label htmlFor="email">Email</label>
           <input id="email" type="email" autoComplete="email" value={form.email} onChange={cambiar("email")} required />
