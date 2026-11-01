@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { disponibilidadTurnos, especialidadPorVoz, solicitarTurno } from "../../api/turnosApi";
-import { callar, hablar } from "../../utils/voz";
+import { callar, hablar, limpiarDicho, terminaConComando } from "../../utils/voz";
 import { fechaHablada, fechaLarga, partesDia } from "../../utils/fechas";
 import "./Turnos.css";
 
@@ -25,10 +25,12 @@ const MENSAJES_VOZ = {
   "network": "El reconocimiento de voz necesita internet. Revisá tu conexión.",
 };
 
+const SILENCIO_MS = 2500; // si nadie habla durante este tiempo, se da la frase por terminada
+
 // Instrucciones de cada paso: se muestran escritas y se pueden escuchar.
 const GUIA = {
   especialidad:
-    "Paso uno de dos. Elegí la especialidad: tocá una de la lista y después el botón siguiente. O tocá el botón pedir por voz y decí, por ejemplo: quiero un turno con cardiología.",
+    "Paso uno de dos. Elegí la especialidad: tocá una de la lista y después el botón siguiente. O tocá el botón pedir por voz y decí, por ejemplo: quiero un turno con cardiología. Cuando termines de hablar, decí listo.",
   horario: (esp, porVoz) =>
     `${porVoz ? `Entendí ${esp}. ` : ""}Paso dos de dos. Tocá el día que querés, después el horario, y por último el botón confirmar turno.`,
 };
@@ -48,6 +50,7 @@ export default function SolicitarTurno({ onVerTurnos, onInicio }) {
   const [escuchando, setEscuchando] = useState(false);
   const [guiada, setGuiada] = useState(false); // la guía hablada se activa al tocar "Escuchar" o "Pedir por voz"
   const enCurso = useRef(false); // evita que un doble toque mande el pedido dos veces
+  const cortarMic = useRef(null); // corta el micrófono sin procesar lo que se alcanzó a decir
 
   const textoGuia = () => {
     if (paso === "especialidad") return GUIA.especialidad;
@@ -61,7 +64,10 @@ export default function SolicitarTurno({ onVerTurnos, onInicio }) {
     if (guiada) hablar(textoGuia());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso, guiada]);
-  useEffect(() => callar, []);
+  useEffect(() => () => {
+    callar();
+    cortarMic.current?.();
+  }, []);
 
   const protegido = async (accion) => {
     if (enCurso.current) return;
@@ -99,42 +105,69 @@ export default function SolicitarTurno({ onVerTurnos, onInicio }) {
       setMensaje({ ok: false, texto: "Este navegador no permite pedir por voz. Abrí la app en Chrome o Edge, o elegí la especialidad en la lista." });
       return;
     }
-    setGuiada(true);
+    // Ojo: la guía hablada (setGuiada) se activa recién cuando se entendió el pedido. Si se activara acá,
+    // leería todo el paso en voz alta con el micrófono ya abierto y la app se escucharía a sí misma.
     setMensaje({ ok: true, texto: "Escuchá la indicación y después hablá." });
 
     const escuchar = () => {
       const r = new Reconocimiento();
       r.lang = "es-AR";
-      r.interimResults = false;
-      r.maxAlternatives = 1;
-      let atendido = false; // el navegador puede avisar el resultado más de una vez
-      r.onresult = async (ev) => {
-        if (atendido) return;
-        atendido = true;
-        const dicho = ev.results[0][0].transcript;
+      r.continuous = true; // sigue escuchando aunque hagas una pausa
+      r.interimResults = true; // se ve en pantalla lo que se va entendiendo
+      let texto = "";
+      let anulado = false; // true si se cortó el micrófono a propósito: no se procesa nada
+      let silencio = null;
+
+      const terminar = () => {
+        clearTimeout(silencio);
+        try { r.stop(); } catch { /* ya estaba detenido */ }
+      };
+      cortarMic.current = () => {
+        anulado = true;
+        clearTimeout(silencio);
+        try { r.abort(); } catch { /* ya estaba detenido */ }
+      };
+
+      r.onresult = (ev) => {
+        texto = Array.from(ev.results).map((parte) => parte[0].transcript).join(" ");
+        setMensaje({ ok: true, texto: `Te escucho: “${texto}”` });
+        clearTimeout(silencio);
+        // Se termina diciendo "listo" o "siguiente"; si no se dice, alcanza con quedarse callado un momento.
+        if (terminaConComando(texto)) terminar();
+        else silencio = setTimeout(terminar, SILENCIO_MS);
+      };
+      r.onerror = (ev) => {
+        if (anulado || ev.error === "aborted") return;
+        setMensaje({ ok: false, texto: MENSAJES_VOZ[ev.error] || "No pudimos escucharte. Probá de nuevo." });
+      };
+      r.onend = async () => {
+        clearTimeout(silencio);
+        cortarMic.current = null;
+        setEscuchando(false);
+        const dicho = limpiarDicho(texto);
+        if (anulado || !dicho) return; // si no se dijo nada, ya quedó el aviso del error en pantalla
         setMensaje({ ok: true, texto: `Escuchamos: “${dicho}”.` });
         try {
           const { especialidad: clave } = await especialidadPorVoz(dicho);
           await irAHorarios(clave, "voz", dicho);
+          setGuiada(true); // desde acá la guía lee el paso siguiente
         } catch (e) {
           const causa = e.response?.data?.error || "No pudimos entender el pedido.";
           setMensaje({ ok: false, texto: `${causa} (Escuchamos: “${dicho}”)` });
           hablar("No te entendí. Probá de nuevo, o tocá la especialidad en la lista.");
         }
       };
-      r.onerror = (ev) => setMensaje({ ok: false, texto: MENSAJES_VOZ[ev.error] || "No pudimos escucharte. Probá de nuevo." });
-      r.onend = () => setEscuchando(false);
       try {
         setEscuchando(true);
-        setMensaje({ ok: true, texto: "Te escucho… Decí, por ejemplo: “quiero un turno con cardiología”." });
+        setMensaje({ ok: true, texto: "Te escucho… Decí, por ejemplo: “quiero un turno con cardiología” y al final decí “listo”." });
         r.start();
       } catch {
         setEscuchando(false);
         setMensaje({ ok: false, texto: "No pudimos activar el micrófono. Probá de nuevo." });
       }
     };
-    // Primero la voz explica qué decir; cuando termina de hablar, se abre el micrófono.
-    hablar("Después del aviso, decí por ejemplo: quiero un turno con cardiología.", escuchar);
+    // Primero la voz explica qué decir; recién cuando termina de hablar se abre el micrófono.
+    hablar("Después del aviso, decí por ejemplo: quiero un turno con cardiología. Cuando termines, decí listo.", () => setTimeout(escuchar, 300));
   };
 
   const confirmar = () =>
@@ -204,7 +237,7 @@ export default function SolicitarTurno({ onVerTurnos, onInicio }) {
         <p className="paso-numero">Paso {numeroPaso} de 2</p>
         <p className="guia-texto">{textoGuia()}</p>
         <div className="guia-botones">
-          <button type="button" className="btn-chico" onClick={() => { setGuiada(true); hablar(textoGuia()); }}>🔊 Escuchar</button>
+          <button type="button" className="btn-chico" onClick={() => { cortarMic.current?.(); setGuiada(true); hablar(textoGuia()); }}>🔊 Escuchar</button>
           {guiada && <button type="button" className="btn-chico" onClick={() => { setGuiada(false); callar(); }}>🔇 Apagar voz</button>}
         </div>
       </div>
