@@ -37,3 +37,9 @@ button, input, select, textarea { font-family: inherit; }
 
 /* Texto para lectores de pantalla (no se ve, pero se lee en voz alta) */
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Cabecera azul de las pantallas internas */
+.cabecera { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--azul); color: #fff; }
+.cabecera-titulo { margin: 0; font-size: 1.4rem; font-weight: 700; }
+.cabecera-volver { min-width: 44px; min-height: 44px; font-size: 1.6rem; color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 12px; cursor: pointer; }
+.cabecera-volver:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }

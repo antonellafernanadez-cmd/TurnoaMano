@@ -1,25 +1,21 @@
-/* Mismo estilo accesible que Turnos.css: letra grande y alto contraste
-   (encuesta: 47% con dificultad visual). */
-.auth { max-width: 640px; margin: 0 auto; padding: 24px 16px; font-size: 1.25rem; color: #0b1f4d; }
-.auth h1 { font-size: 2rem; margin: 0 0 20px; }
-.auth label { display: block; margin: 20px 0 6px; font-weight: 700; }
+/* Login y registro: tarjeta blanca, campos grandes y ayuda debajo de cada campo. */
+.auth { max-width: 480px; margin: 0 auto; padding: 22px 18px 40px; }
+.auth-logo { text-align: center; margin-bottom: 4px; }
+.auth h2 { margin: 6px 0 4px; font-size: 1.9rem; text-align: center; }
+.auth-intro { margin: 0 0 18px; text-align: center; color: var(--gris); font-size: 1.05rem; }
+.auth-tarjeta { background: #fff; border-radius: 18px; padding: 8px 18px 22px; box-shadow: 0 6px 20px rgba(11, 63, 168, .10); }
+.auth label { display: block; margin: 18px 0 6px; font-weight: 700; }
 .auth input {
-  width: 100%; font-size: 1.15rem; padding: 12px; border: 2px solid #0b1f4d;
-  border-radius: 8px; background: #fff; color: inherit; box-sizing: border-box;
+  width: 100%; font-size: 1.15rem; padding: 14px; border: 2px solid var(--azul-oscuro);
+  border-radius: 12px; background: #fff; color: inherit;
 }
-.auth input:focus-visible { outline: 4px solid #f2b300; outline-offset: 2px; }
-.btn {
-  display: block; width: 100%; margin-top: 20px; padding: 16px; font-size: 1.25rem;
-  font-weight: 700; color: #fff; background: #0b3fa8; border: 2px solid #0b3fa8;
-  border-radius: 10px; cursor: pointer;
+.auth input:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+.ayuda { margin: 6px 2px 0; font-size: .95rem; color: var(--gris); }
+.campo-clave { position: relative; }
+.campo-clave input { padding-right: 112px; }
+.ver-clave {
+  position: absolute; right: 6px; top: 6px; bottom: 6px; padding: 0 12px; font-size: .95rem; font-weight: 700;
+  color: var(--azul); background: #e8f0ff; border: none; border-radius: 9px; cursor: pointer;
 }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn:focus-visible { outline: 4px solid #f2b300; outline-offset: 2px; }
-.btn-secundario { background: #fff; color: #0b3fa8; }
-.msg-ok { color: #0a6b2a; font-weight: 700; margin-top: 16px; }
-.msg-error { color: #a11212; font-weight: 700; margin-top: 16px; }
-.link-volver {
-  display: block; margin: 20px auto 0; background: none; border: none;
-  color: #0b3fa8; font-size: 1rem; font-weight: 700; cursor: pointer;
-}
-.link-volver:focus-visible { outline: 3px solid #f2b300; outline-offset: 2px; }
+.ver-clave:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.auth-pie { margin-top: 18px; text-align: center; }
