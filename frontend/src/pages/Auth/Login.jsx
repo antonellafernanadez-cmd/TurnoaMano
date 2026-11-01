@@ -2,7 +2,7 @@ import { useState } from "react";
 import { iniciarSesion } from "../../api/authApi";
 import "./Auth.css";
 
-export default function Login({ onLogin, irARegistro }) {
+export default function Login({ onLogin, irARegistro, volver }) {
   const [identificador, setIdentificador] = useState("");
   const [password, setPassword] = useState("");
   const [mensaje, setMensaje] = useState(null);

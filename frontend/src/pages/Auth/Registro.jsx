@@ -2,7 +2,7 @@ import { useState } from "react";
 import { registrarPaciente } from "../../api/authApi";
 import "./Auth.css";
 
-export default function Registro({ onRegistrado, irALogin }) {
+export default function Registro({ onRegistrado, irALogin, volver }) {
   const [form, setForm] = useState({
     nombre: "", telefono: "", email: "", identificador: "", password: "",
   });
