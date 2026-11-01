@@ -1,0 +1,17 @@
+.pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; margin-bottom: 18px; background: #e3ebfa; border-radius: 14px; }
+.pestanas button { padding: 12px 6px; font-size: 1.05rem; font-weight: 700; color: var(--azul); background: transparent; border: none; border-radius: 10px; cursor: pointer; }
+.pestanas button.activa { color: #fff; background: var(--azul); }
+.pestanas button:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+
+.tarjeta-turno { padding: 14px 16px; margin-bottom: 14px; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(11, 63, 168, .10); }
+.tarjeta-fila { display: flex; align-items: center; gap: 14px; }
+.tarjeta-datos h2 { margin: 0; font-size: 1.3rem; }
+.cuando { margin: 4px 0 0; font-size: 1.1rem; font-weight: 700; color: var(--azul); }
+.chip { display: inline-block; margin: 12px 0 0; padding: 4px 14px; font-size: .95rem; font-weight: 700; border-radius: 999px; }
+.chip-confirmado { color: var(--ok); background: #dcf5e4; }
+.chip-solicitado { color: #6b4a00; background: #fff0c9; }
+.chip-propuesto { color: #6b4a00; background: #fff0c9; }
+.chip-rechazado, .chip-cancelado { color: var(--rojo); background: #fde4e4; }
+.acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-medio { padding: 12px; font-size: 1.05rem; }
+.vacio { text-align: center; color: var(--gris); }
