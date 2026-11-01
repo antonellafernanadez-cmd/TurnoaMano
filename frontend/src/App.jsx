@@ -64,7 +64,7 @@ export default function App() {
   return (
     <>
       <Cabecera titulo={TITULOS[pantalla]} onVolver={() => setPantalla("inicio")} />
-      {pantalla === "pedir" && <SolicitarTurno onVerTurnos={() => setPantalla("mios")} />}
+      {pantalla === "pedir" && <SolicitarTurno onVerTurnos={() => setPantalla("mios")} onInicio={() => setPantalla("inicio")} />}
       {pantalla === "mios" && <MisTurnos />}
     </>
   );

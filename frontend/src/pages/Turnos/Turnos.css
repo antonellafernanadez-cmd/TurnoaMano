@@ -1,21 +1,54 @@
-/* Letra grande y alto contraste: el público son adultos mayores (encuesta: 47% con dificultad visual). */
-.turnos { max-width: 640px; margin: 0 auto; padding: 24px 16px; font-size: 1.25rem; color: #0b1f4d; }
-.turnos h1 { font-size: 2rem; margin: 0 0 20px; }
-.turnos label { display: block; margin: 20px 0 6px; font-weight: 700; }
-.turnos select, .turnos textarea { width: 100%; font-size: 1.15rem; padding: 12px; border: 2px solid #0b1f4d; border-radius: 8px; background: #fff; color: inherit; }
-.turnos textarea { min-height: 96px; }
-.btn { display: block; width: 100%; margin-top: 20px; padding: 16px; font-size: 1.25rem; font-weight: 700; color: #fff; background: #0b3fa8; border: 2px solid #0b3fa8; border-radius: 10px; cursor: pointer; }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn:focus-visible, .turnos select:focus-visible, .turnos textarea:focus-visible { outline: 4px solid #f2b300; outline-offset: 2px; }
-.btn-voz { margin-top: 0; padding: 22px; font-size: 1.4rem; }
-.btn-secundario { background: #fff; color: #0b3fa8; }
-.separador { text-align: center; margin: 24px 0 0; }
-.turno { border: 2px solid #0b1f4d; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-.turno h2 { margin: 0 0 6px; font-size: 1.4rem; text-transform: capitalize; }
-.estado { font-weight: 700; margin: 4px 0; }
-.estado-propuesto { color: #8a5a00; }
-.estado-confirmado { color: #0a6b2a; }
-.estado-rechazado { color: #a11212; }
-.acciones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.msg-ok { color: #0a6b2a; font-weight: 700; }
-.msg-error { color: #a11212; font-weight: 700; }
+/* Pantallas de turnos: pedir, mis turnos y avisos. */
+.turnos { font-size: 1.15rem; }
+.subtitulo { display: flex; align-items: center; gap: 8px; margin: 22px 0 10px; font-size: 1.35rem; }
+.etiqueta { display: block; margin: 22px 0 6px; font-weight: 700; }
+.opcional { font-weight: 400; color: var(--gris); }
+.turnos textarea { width: 100%; min-height: 84px; padding: 12px; font-size: 1.1rem; color: inherit; background: #fff; border: 2px solid var(--azul-oscuro); border-radius: 12px; }
+.turnos textarea:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+
+/* guía del paso */
+.guia { padding: 14px 16px; margin-bottom: 18px; background: #e8f0ff; border: 2px solid var(--azul); border-radius: 16px; }
+.guia p { margin: 0; }
+.paso-numero { margin-bottom: 6px !important; font-weight: 800; color: var(--azul); }
+.guia-texto { font-size: 1.05rem; line-height: 1.45; }
+.guia-botones { display: flex; gap: 10px; margin-top: 12px; }
+.btn-chico { padding: 10px 14px; font-size: 1rem; font-weight: 700; color: var(--azul); background: #fff; border: 2px solid var(--azul); border-radius: 10px; cursor: pointer; }
+.btn-chico:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+
+/* botón de voz (reusa .banda de Inicio.css) */
+.turnos .banda { margin-top: 0; }
+.banda.escuchando { background: #fde4e4; border-color: var(--rojo); animation: latido 1.2s infinite; }
+.banda:disabled { cursor: not-allowed; }
+@keyframes latido { 50% { opacity: .7; } }
+
+/* lista de especialidades */
+.lista-esp { display: grid; gap: 10px; }
+.fila-esp { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 14px; text-align: left; font-size: 1.2rem; font-weight: 700; color: var(--azul-oscuro); background: #e9f1ff; border: 2px solid transparent; border-radius: 14px; cursor: pointer; }
+.fila-esp.activa { background: #fff; border-color: var(--azul); }
+.fila-esp:disabled { opacity: .6; cursor: not-allowed; }
+.fila-esp:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+.fila-icono { display: grid; place-items: center; flex: none; width: 44px; height: 44px; font-size: 1.5rem; background: #fff; border-radius: 12px; }
+.fila-nombre { flex: 1; }
+.radio { flex: none; width: 26px; height: 26px; background: #fff; border: 2px solid #9db2da; border-radius: 50%; }
+.fila-esp.activa .radio { border-color: var(--azul); background: radial-gradient(circle, var(--azul) 0 48%, #fff 52%); }
+
+/* día y horario */
+.elegido { margin: 0; font-size: 1.4rem; font-weight: 800; }
+.dias { display: flex; gap: 8px; padding-bottom: 6px; overflow-x: auto; }
+.opcion { color: var(--azul); background: #fff; border: 2px solid #b7c8ea; border-radius: 12px; cursor: pointer; font-weight: 700; }
+.opcion.activa { color: #fff; background: var(--azul); border-color: var(--azul); }
+.opcion:disabled { opacity: .45; cursor: not-allowed; }
+.dia { display: flex; flex: none; flex-direction: column; align-items: center; min-width: 70px; padding: 8px 6px; font-size: .95rem; }
+.dia strong { font-size: 1.6rem; line-height: 1.1; }
+.horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.hora { padding: 14px 4px; font-size: 1.2rem; }
+.ocupado-texto { display: block; font-size: .8rem; font-weight: 400; }
+
+/* resumen y pantalla final */
+.resumen { margin: 14px 0 6px; padding: 8px 16px; text-align: left; background: #fff; border: 2px solid #cfdaf0; border-radius: 14px; }
+.resumen p { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.listo { text-align: center; }
+.listo h2 { margin: 6px 0 2px; font-size: 2rem; }
+.listo-texto { margin: 0 0 12px; color: var(--gris); }
+.check { display: grid; place-items: center; width: 84px; height: 84px; margin: 20px auto 8px; font-size: 3rem; color: #fff; background: var(--ok); border-radius: 50%; }
+.link-centro { display: block; margin: 18px auto 0; }
