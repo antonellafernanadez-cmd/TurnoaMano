@@ -75,3 +75,20 @@ def test_no_se_repite_un_pedido_en_curso_de_la_misma_especialidad(client):
     assert client.post("/api/turnos", json=otra, headers=h).status_code == 201        # otra especialidad: sí
     otro_paciente = token("87654321", "paciente")
     assert client.post("/api/turnos", json=pedido, headers=otro_paciente).status_code == 201  # otro paciente: sí
+
+
+@pytest.mark.parametrize("frase, esperada", [
+    ("Quiero un turno con el cardiólogo", "cardiologia"),
+    ("necesito el traumatólogo por la rodilla", "traumatologia"),
+    ("turno con el oculista", "oftalmologia"),
+    ("Necesito un dentista", "odontologia"),
+    ("quiero ver a un dermatólogo", "dermatologia"),
+    ("turno con el médico clínico", "clinica medica"),
+    ("Turno con neurología.", "neurologia"),
+    ("necesito un neurólogo", "neurologia"),
+    ("quiero ver al urólogo", "urologia"),
+    ("turno de urología", "urologia"),
+])
+def test_voz_entiende_como_lo_dice_la_gente(frase, esperada):
+    esp, _ = SolicitudPorVoz().interpretar({"transcripcion": frase})
+    assert esp == esperada

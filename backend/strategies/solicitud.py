@@ -21,6 +21,7 @@ PALABRAS_CLAVE = {
     "ginecologia": ("gineco",),
     "neurologia": ("neuro",),
     "odontologia": ("odonto", "dentista", "diente", "muela"),
+    "urologia": ("urolog", "prostata", "rinon"),   # va después de neurologia (que contiene "urolog")
 }
 
 

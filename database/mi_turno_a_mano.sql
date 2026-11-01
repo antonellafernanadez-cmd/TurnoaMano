@@ -30,7 +30,7 @@ CREATE TABLE turnos (
   especialidad VARCHAR(40)  NOT NULL,
   motivo       VARCHAR(300) NOT NULL DEFAULT '',
   origen       ENUM('manual','voz') NOT NULL,
-  estado       ENUM('solicitado','propuesto','confirmado','rechazado') NOT NULL DEFAULT 'solicitado',
+  estado       ENUM('solicitado','propuesto','confirmado','rechazado','cancelado') NOT NULL DEFAULT 'solicitado',
   fecha_hora   DATETIME NULL,
   creado_en    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_paciente (paciente_id),
