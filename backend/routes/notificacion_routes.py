@@ -18,6 +18,12 @@ def leida(notificacion_id):
     return jsonify(C.marcar_leida(g.usuario, notificacion_id))
 
 
+@notificaciones_bp.post("/turnos/<int:turno_id>/aviso")
+@requiere_rol("administrativo")
+def aviso(turno_id):
+    return jsonify(C.enviar_aviso_demora(turno_id, request.get_json(silent=True)))
+
+
 @notificaciones_bp.post("/turnos/<int:turno_id>/recordatorio")
 @requiere_rol("administrativo")
 def recordatorio(turno_id):

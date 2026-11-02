@@ -1,5 +1,5 @@
 """Lógica y validaciones de turnos (historia 1; la 2 y la 4 reutilizan asignar/listar)."""
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from flask import current_app
 from events.bus import bus
 from models import turno as T
@@ -29,7 +29,7 @@ def _cambiar_estado(doc, nuevo, extra=None, **evento):
 
 # ---- elegir día y horario ----
 def _leer_fecha_elegida(valor):
-    """Convierte '2026-10-29T09:30' en datetime. Devuelve None si no se mandó fecha."""
+    """Convierte una fecha ISO. Devuelve None si no se mandó fecha."""
     if valor in (None, ""):
         return None
     try:
@@ -42,36 +42,78 @@ def _leer_fecha_elegida(valor):
 
 
 def _verificar_horario_libre(especialidad, fecha, ignorar_id=None):
-    """El horario tiene que estar en la grilla y no estar tomado en esa especialidad.
-    (Dos pedidos simultáneos al mismo horario podrían colarse: para producción habría que
-    sumar una restricción única en la base. Para esta versión alcanza con esta verificación.)"""
+    """Verifica que el horario esté disponible y no esté ocupado."""
     if not agenda.es_horario_valido(fecha):
         raise ApiError("Ese día u horario no está disponible. Elegí otro.", 400)
+
     desde, hasta = agenda.rango_visible()
+
     for ocupado in _repo().ocupados(especialidad, desde, hasta):
         if ocupado["fecha_hora"] == fecha and ocupado["id"] != ignorar_id:
             raise ApiError("Ese horario ya fue tomado. Elegí otro.", 409)
 
 
 def _en_curso(turno, ahora):
-    """Un turno 'en curso' es uno que todavía no pasó ni se cerró."""
+    """Un turno en curso es uno que todavía no pasó ni se cerró."""
     if turno["estado"] in (T.SOLICITADO, T.PROPUESTO):
         return True
-    return turno["estado"] == T.CONFIRMADO and turno["fecha_hora"] is not None and turno["fecha_hora"] >= ahora
+
+    return (
+        turno["estado"] == T.CONFIRMADO
+        and turno["fecha_hora"] is not None
+        and turno["fecha_hora"] >= ahora
+    )
 
 
 def disponibilidad(especialidad):
-    esp = ESTRATEGIAS["manual"].interpretar({"especialidad": especialidad})[0]
+    esp = ESTRATEGIAS["manual"].interpretar(
+        {"especialidad": especialidad}
+    )[0]
+
     desde, hasta = agenda.rango_visible()
-    ocupados = [o["fecha_hora"] for o in _repo().ocupados(esp, desde, hasta)]
-    return {"especialidad": esp, "dias": agenda.armar_disponibilidad(ocupados)}
+    ocupados = [
+        o["fecha_hora"]
+        for o in _repo().ocupados(esp, desde, hasta)
+    ]
+
+    return {
+        "especialidad": esp,
+        "dias": agenda.armar_disponibilidad(ocupados)
+    }
 
 
 def especialidad_por_voz(datos):
-    """Paso 1 del pedido por voz: de la frase dicha sale la especialidad (todavía no se crea el turno)."""
+    """Interpreta la especialidad solicitada mediante voz."""
     esp, _ = ESTRATEGIAS["voz"].interpretar(datos or {})
     return {"especialidad": esp}
 
+
+def _fecha_futura(datos):
+    try:
+        fecha = datetime.fromisoformat(str(datos.get("fecha_hora")))
+    except (ValueError, TypeError):
+        raise ApiError("fecha_hora debe tener formato ISO (2026-11-10T09:30).", 400)
+
+    if fecha.tzinfo is not None:
+        fecha = fecha.astimezone(timezone.utc).replace(tzinfo=None)
+
+    if fecha <= T.ahora_utc():
+        raise ApiError("La fecha del turno debe ser futura.", 400)
+
+    return fecha
+
+
+def _validar_medico(medico_id):
+    """Verifica que el médico exista."""
+    if medico_id is None:
+        return None
+
+    if not isinstance(medico_id, str) or str(medico_id) not in {
+        str(m["id"]) for m in current_app.config["MEDICOS"]()
+    }:
+        raise ApiError("El médico indicado no existe.", 400)
+
+    return medico_id
 
 def crear_turno(usuario, datos):
     if not isinstance(datos, dict):
@@ -104,20 +146,44 @@ def mis_turnos(usuario):
     return [T.turno_a_json(d) for d in _repo().listar_por_paciente(usuario["id"])]
 
 
-def listar_turnos(estado=None):
-    return [T.turno_a_json(d) for d in _repo().listar(estado)]
+def listar_turnos(estado=None, medico_id=None, fecha=None):
+    if estado and estado not in T.ESTADOS:
+        raise ApiError("Estado no válido.", 400)
+    if fecha:
+        try:
+            fecha = date.fromisoformat(fecha).isoformat()
+        except ValueError:
+            raise ApiError("La fecha debe tener formato AAAA-MM-DD.", 400)
+    if medico_id and len(medico_id) > 20:
+        raise ApiError("Médico no válido.", 400)
+    return [T.turno_a_json(d) for d in _repo().listar(estado, medico_id, fecha)]
 
 
 def asignar_fecha(turno_id, datos):
-    try:
-        fecha = datetime.fromisoformat(str(datos.get("fecha_hora")))
-    except ValueError:
-        raise ApiError("fecha_hora debe tener formato ISO (2026-11-10T09:30).", 400)
-    if fecha.tzinfo is not None:
-        fecha = fecha.astimezone(timezone.utc).replace(tzinfo=None)
-    if fecha <= T.ahora_utc():
-        raise ApiError("La fecha del turno debe ser futura.", 400)
-    return T.turno_a_json(_cambiar_estado(_cargar(turno_id), T.PROPUESTO, {"fecha_hora": fecha}))
+    fecha = _fecha_futura(datos)
+    extra = {"fecha_hora": fecha}
+    if datos.get("medico_id") is not None:
+        extra["medico_id"] = _validar_medico(datos.get("medico_id"))
+    return T.turno_a_json(_cambiar_estado(_cargar(turno_id), T.PROPUESTO, extra))
+
+
+def reprogramar_turno(turno_id, datos):
+    """Historia 4: cambia la fecha de un turno ya propuesto o confirmado. Vuelve a "propuesto"
+    para que el paciente acepte la nueva fecha, y el aviso sale solo (evento turno.reprogramado)."""
+    doc = _cargar(turno_id)
+    if doc["estado"] not in T.CON_FECHA:
+        raise ApiError(f"No se puede reprogramar un turno '{doc['estado']}'.", 409)
+    campos = {"estado": T.PROPUESTO, "fecha_hora": _fecha_futura(datos)}
+    if datos.get("medico_id") is not None:
+        campos["medico_id"] = _validar_medico(datos.get("medico_id"))
+    actualizado = _repo().actualizar(doc["id"], campos)
+    bus.publicar("turno.reprogramado", turno_id=doc["id"], estado=T.PROPUESTO)
+    return T.turno_a_json(actualizado)
+
+
+def cancelar_turno(turno_id):
+    """Historia 4: suspensión de un turno. El aviso al paciente sale solo (evento turno.cancelado)."""
+    return T.turno_a_json(_cambiar_estado(_cargar(turno_id), T.CANCELADO))
 
 
 def responder_turno(usuario, turno_id, datos):
