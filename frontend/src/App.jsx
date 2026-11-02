@@ -12,6 +12,10 @@ import Cabecera from "./components/Cabecera";
 import "./App.css";
 import MiCuidador from "./pages/Cuidador/MiCuidador";
 import PanelCuidador from "./pages/Cuidador/PanelCuidador";
+import GestionTurnos from "./pages/Admin/GestionTurnos";
+import RecordatoriosMedicacion from "./pages/Admin/RecordatoriosMedicacion";
+import PanelRecetas from "./pages/Medico/PanelRecetas";
+import MiMedicacion from "./pages/Medicacion/MiMedicacion";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -20,6 +24,9 @@ const TITULOS = {
   mios: "Mis turnos",
   avisos: "Avisos",
   cuidador: "Mi cuidador",
+  medicacion: "Mi medicación",
+  admin_turnos: "Gestión de turnos",
+  admin_med: "Recordatorios",
 };
 
 function usuarioGuardado() {
@@ -291,30 +298,57 @@ export default function App() {
   );
 }
 
-if (usuario.rol && usuario.rol !== "paciente") {
+if (usuario.rol === "medico") {
   return (
     <>
-      <Cabecera titulo="Mi Turno a Mano" />
-
-      <main className="pantalla">
-        <p>
-          Hola, {nombre || "bienvenido"}. El panel de{" "}
-          {usuario.rol === "medico"
-            ? "médicos"
-            : "administrativos"}{" "}
-          todavía no está disponible.
-        </p>
-
-        <button
-          type="button"
-          className="btn btn-peligro"
-          onClick={cerrarSesion}
-        >
-          Cerrar sesión
-        </button>
-      </main>
+      <Cabecera titulo="Panel médico" />
+      <PanelRecetas onSalir={cerrarSesion} />
     </>
   );
+}
+
+if (usuario.rol === "administrativo") {
+  if (pantalla === "admin_med") {
+    return (
+      <>
+        <Cabecera
+          titulo="Recordatorios"
+          onVolver={() => setPantalla("inicio")}
+        />
+        <RecordatoriosMedicacion onVolver={() => setPantalla("inicio")} />
+      </>
+    );
+  }
+  if (pantalla === "admin_turnos" || pantalla === "inicio") {
+    return (
+      <>
+        <Cabecera titulo="Administración" />
+        {pantalla === "inicio" ? (
+          <main className="pantalla">
+            <p>Hola, {nombre || "bienvenido"}.</p>
+            <button type="button" className="btn" onClick={() => setPantalla("admin_turnos")}>
+              Gestión de turnos
+            </button>
+            <button type="button" className="btn btn-secundario" onClick={() => setPantalla("admin_med")}>
+              Recordatorios de medicación
+            </button>
+            <button type="button" className="btn btn-peligro" onClick={cerrarSesion}>
+              Cerrar sesión
+            </button>
+          </main>
+        ) : (
+          <>
+            <main className="pantalla">
+              <button type="button" className="btn btn-secundario" onClick={() => setPantalla("inicio")}>
+                Menú administración
+              </button>
+            </main>
+            <GestionTurnos onSalir={cerrarSesion} />
+          </>
+        )}
+      </>
+    );
+  }
 }
 
   if (pantalla === "inicio") {
@@ -364,6 +398,9 @@ if (usuario.rol && usuario.rol !== "paciente") {
       {pantalla === "cuidador" && (
   <MiCuidador onInicio={() => irA("inicio")} />
 )}
+      {pantalla === "medicacion" && (
+        <MiMedicacion onInicio={() => irA("inicio")} />
+      )}
     </>
   );
 }
