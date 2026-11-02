@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from "react";
 import Bienvenida from "./pages/Bienvenida/Bienvenida";
 import Login from "./pages/Auth/Login";
@@ -9,11 +10,16 @@ import Avisos from "./pages/Avisos/Avisos";
 import { obtenerAvisos } from "./api/turnosApi";
 import Cabecera from "./components/Cabecera";
 import "./App.css";
+import MiCuidador from "./pages/Cuidador/MiCuidador";
+import PanelCuidador from "./pages/Cuidador/PanelCuidador";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const TITULOS = {
   pedir: "Pedir turno",
   mios: "Mis turnos",
   avisos: "Avisos",
+  cuidador: "Mi cuidador",
 };
 
 function usuarioGuardado() {
@@ -36,6 +42,12 @@ export default function App() {
   const [avisosCargados, setAvisosCargados] = useState(false);
 
   const [iniciarPedidoPorVoz, setIniciarPedidoPorVoz] = useState(false);
+
+  // Datos para el ingreso del cuidador
+  const [dniPaciente, setDniPaciente] = useState("");
+  const [codigoCuidador, setCodigoCuidador] = useState("");
+  const [errorCuidador, setErrorCuidador] = useState("");
+  const [cargandoCuidador, setCargandoCuidador] = useState(false);
 
   const contarAvisos = useCallback(() => {
     setAvisosCargados(false);
@@ -84,6 +96,74 @@ export default function App() {
     setSinLeer(0);
     setAvisosCargados(false);
     setIniciarPedidoPorVoz(false);
+
+    setDniPaciente("");
+    setCodigoCuidador("");
+    setErrorCuidador("");
+  };
+
+  const ingresarComoCuidador = async (e) => {
+    e.preventDefault();
+    setErrorCuidador("");
+
+    if (!dniPaciente.trim() || !codigoCuidador.trim()) {
+      setErrorCuidador("Completá el DNI del paciente y el código.");
+      return;
+    }
+
+    setCargandoCuidador(true);
+
+    try {
+      const respuesta = await fetch(
+        `${API_URL}/api/auth/login-cuidador`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            identificador: dniPaciente.trim(),
+            codigo: codigoCuidador.trim(),
+          }),
+        }
+      );
+
+      const datos = await respuesta.json();
+
+      if (!respuesta.ok) {
+        throw new Error(
+          datos.error || datos.mensaje || "No se pudo iniciar sesión."
+        );
+      }
+
+      if (!datos.token || !datos.usuario) {
+        throw new Error("El servidor no devolvió los datos de acceso.");
+      }
+
+      const usuario = {
+        ...datos.usuario,
+        rol: "cuidador",
+        tipo_acceso: "cuidador",
+        cuidador: datos.cuidador,
+      };
+
+      localStorage.setItem("token", datos.token);
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+
+      setAutenticado(true);
+      setPantalla("inicio");
+      setVistaAuth("bienvenida");
+
+      setDniPaciente("");
+      setCodigoCuidador("");
+      setErrorCuidador("");
+    } catch (error) {
+      setErrorCuidador(
+        error.message || "Ocurrió un error al ingresar."
+      );
+    } finally {
+      setCargandoCuidador(false);
+    }
   };
 
   if (!autenticado) {
@@ -107,10 +187,94 @@ export default function App() {
       );
     }
 
+    if (vistaAuth === "loginCuidador") {
+      return (
+        <>
+          <Cabecera
+            titulo="Acceso para cuidadores"
+            onVolver={() => {
+              setVistaAuth("bienvenida");
+              setErrorCuidador("");
+            }}
+          />
+
+          <main className="pantalla">
+            <h2>Ingresar como cuidador</h2>
+
+            <p>
+              Ingresá el DNI del paciente y el código de seis
+              dígitos que te compartió.
+            </p>
+
+            <form onSubmit={ingresarComoCuidador}>
+              <div className="campo">
+                <label htmlFor="dniPaciente">
+                  DNI del paciente
+                </label>
+                <input
+                  id="dniPaciente"
+                  type="text"
+                  inputMode="numeric"
+                  value={dniPaciente}
+                  onChange={(e) => setDniPaciente(e.target.value)}
+                  placeholder="Ingresá el DNI"
+                  maxLength={8}
+                  required
+                />
+              </div>
+
+              <div className="campo">
+                <label htmlFor="codigoCuidador">
+                  Código de acceso
+                </label>
+                <input
+                  id="codigoCuidador"
+                  type="text"
+                  inputMode="numeric"
+                  value={codigoCuidador}
+                  onChange={(e) =>
+                    setCodigoCuidador(e.target.value)
+                  }
+                  placeholder="Código de 6 dígitos"
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              {errorCuidador && (
+                <p role="alert" className="mensaje-error">
+                  {errorCuidador}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="btn btn-iniciar"
+                disabled={cargandoCuidador}
+              >
+                {cargandoCuidador
+                  ? "Ingresando..."
+                  : "Ingresar"}
+              </button>
+            </form>
+
+            <button
+              type="button"
+              className="btn btn-secundario"
+              onClick={() => setVistaAuth("bienvenida")}
+            >
+              Volver
+            </button>
+          </main>
+        </>
+      );
+    }
+
     return (
       <Bienvenida
         irALogin={() => setVistaAuth("login")}
         irARegistro={() => setVistaAuth("registro")}
+        irALoginCuidador={() => setVistaAuth("loginCuidador")}
       />
     );
   }
@@ -118,31 +282,40 @@ export default function App() {
   const usuario = usuarioGuardado();
   const nombre = (usuario.nombre || "").split(" ")[0] || "";
 
-  if (usuario.rol && usuario.rol !== "paciente") {
-    return (
-      <>
-        <Cabecera titulo="Mi Turno a Mano" />
+  if (usuario.rol === "cuidador") {
+  return (
+    <>
+      <Cabecera titulo="Mi Turno a Mano" />
+      <PanelCuidador onSalir={cerrarSesion} />
+    </>
+  );
+}
 
-        <main className="pantalla">
-          <p>
-            Hola, {nombre || "bienvenido"}. El panel de{" "}
-            {usuario.rol === "medico"
-              ? "médicos"
-              : "administrativos"}{" "}
-            todavía no está disponible.
-          </p>
+if (usuario.rol && usuario.rol !== "paciente") {
+  return (
+    <>
+      <Cabecera titulo="Mi Turno a Mano" />
 
-          <button
-            type="button"
-            className="btn btn-peligro"
-            onClick={cerrarSesion}
-          >
-            Cerrar sesión
-          </button>
-        </main>
-      </>
-    );
-  }
+      <main className="pantalla">
+        <p>
+          Hola, {nombre || "bienvenido"}. El panel de{" "}
+          {usuario.rol === "medico"
+            ? "médicos"
+            : "administrativos"}{" "}
+          todavía no está disponible.
+        </p>
+
+        <button
+          type="button"
+          className="btn btn-peligro"
+          onClick={cerrarSesion}
+        >
+          Cerrar sesión
+        </button>
+      </main>
+    </>
+  );
+}
 
   if (pantalla === "inicio") {
     return (
@@ -161,7 +334,7 @@ export default function App() {
   return (
     <>
       <Cabecera
-        titulo={TITULOS[pantalla]}
+        titulo={TITULOS[pantalla] || "Mi Turno a Mano"}
         onVolver={() => irA("inicio")}
       />
 
@@ -187,6 +360,11 @@ export default function App() {
           onInicio={() => irA("inicio")}
         />
       )}
+
+      {pantalla === "cuidador" && (
+  <MiCuidador onInicio={() => irA("inicio")} />
+)}
     </>
   );
 }
+

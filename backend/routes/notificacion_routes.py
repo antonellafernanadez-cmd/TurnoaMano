@@ -1,6 +1,8 @@
+
 from flask import Blueprint, jsonify, request, g
 from controllers import notificacion_controller as C
 from utils.auth import requiere_rol
+from utils.security import cuidador_activo
 
 notificaciones_bp = Blueprint("notificaciones", __name__, url_prefix="/api")
 
@@ -8,6 +10,14 @@ notificaciones_bp = Blueprint("notificaciones", __name__, url_prefix="/api")
 @notificaciones_bp.get("/notificaciones/mias")
 @requiere_rol("paciente")
 def mias():
+    solo_no_leidas = request.args.get("solo_no_leidas") in ("1", "true")
+    return jsonify(C.mis_notificaciones(g.usuario, solo_no_leidas))
+
+
+# El cuidador consulta los avisos del paciente, sin modificarlos.
+@notificaciones_bp.get("/notificaciones/cuidador")
+@cuidador_activo
+def notificaciones_cuidador():
     solo_no_leidas = request.args.get("solo_no_leidas") in ("1", "true")
     return jsonify(C.mis_notificaciones(g.usuario, solo_no_leidas))
 

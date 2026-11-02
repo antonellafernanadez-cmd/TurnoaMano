@@ -1,4 +1,4 @@
-```python
+
 """PATRÓN OBSERVER (parte 2): quiénes reaccionan a los eventos de turnos que publica el controller.
 El controller de turnos no sabe que existen: solo publica "turno.propuesto" y estos avisos salen solos.
 
@@ -116,4 +116,4 @@ bus.suscribir("turno.propuesto", al_proponer_fecha)
 bus.suscribir("turno.reprogramado", al_reprogramar)
 bus.suscribir("turno.cancelado", al_cancelar)
 bus.suscribir("turno.confirmado", al_confirmar)
-```
+
