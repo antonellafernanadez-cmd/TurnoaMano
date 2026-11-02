@@ -28,5 +28,13 @@ def _registrar(evento):
     return handler
 
 
-for _e in ("turno.solicitado", "turno.propuesto", "turno.confirmado", "turno.rechazado"):
+
+for _e in (
+    "turno.solicitado",
+    "turno.propuesto",
+    "turno.confirmado",
+    "turno.rechazado",
+    "turno.cancelado",
+    "turno.reprogramado",
+):
     bus.suscribir(_e, _registrar(_e))

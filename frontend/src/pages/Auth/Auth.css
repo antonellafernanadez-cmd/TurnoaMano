@@ -1,0 +1,21 @@
+/* Login y registro: tarjeta blanca, campos grandes y ayuda debajo de cada campo. */
+.auth { max-width: 480px; margin: 0 auto; padding: 22px 18px 40px; }
+.auth-logo { text-align: center; margin-bottom: 4px; }
+.auth h2 { margin: 6px 0 4px; font-size: 1.9rem; text-align: center; }
+.auth-intro { margin: 0 0 18px; text-align: center; color: var(--gris); font-size: 1.05rem; }
+.auth-tarjeta { background: #fff; border-radius: 18px; padding: 8px 18px 22px; box-shadow: 0 6px 20px rgba(11, 63, 168, .10); }
+.auth label { display: block; margin: 18px 0 6px; font-weight: 700; }
+.auth input {
+  width: 100%; font-size: 1.15rem; padding: 14px; border: 2px solid var(--azul-oscuro);
+  border-radius: 12px; background: #fff; color: inherit;
+}
+.auth input:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+.ayuda { margin: 6px 2px 0; font-size: .95rem; color: var(--gris); }
+.campo-clave { position: relative; }
+.campo-clave input { padding-right: 112px; }
+.ver-clave {
+  position: absolute; right: 6px; top: 6px; bottom: 6px; padding: 0 12px; font-size: .95rem; font-weight: 700;
+  color: var(--azul); background: #e8f0ff; border: none; border-radius: 9px; cursor: pointer;
+}
+.ver-clave:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.auth-pie { margin-top: 18px; text-align: center; }

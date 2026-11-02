@@ -11,6 +11,30 @@ def crear():
     return jsonify(C.crear_turno(g.usuario, request.get_json(silent=True))), 201
 
 
+@turnos_bp.get("/disponibilidad")
+@requiere_rol("paciente", "administrativo")
+def disponibilidad():
+    return jsonify(C.disponibilidad(request.args.get("especialidad")))
+
+
+@turnos_bp.post("/interpretar-voz")
+@requiere_rol("paciente")
+def interpretar_voz():
+    return jsonify(C.especialidad_por_voz(request.get_json(silent=True)))
+
+
+@turnos_bp.patch("/<int:turno_id>/cancelar")
+@requiere_rol("paciente", "administrativo")
+def cancelar(turno_id):
+    return jsonify(C.cancelar_turno(g.usuario, turno_id))
+
+
+@turnos_bp.patch("/<int:turno_id>/reprogramar")
+@requiere_rol("administrativo")
+def reprogramar(turno_id):
+    return jsonify(C.reprogramar_turno(turno_id, request.get_json(silent=True) or {}))
+
+
 @turnos_bp.get("/mios")
 @requiere_rol("paciente")
 def mios():
@@ -26,10 +50,24 @@ def responder(turno_id):
 @turnos_bp.get("")
 @requiere_rol("administrativo", "medico")
 def listar():
-    return jsonify(C.listar_turnos(request.args.get("estado")))
+    return jsonify(C.listar_turnos(request.args.get("estado"), request.args.get("medico_id"),
+                                   request.args.get("fecha")))
 
 
 @turnos_bp.patch("/<int:turno_id>/asignar")
 @requiere_rol("administrativo")
 def asignar(turno_id):
     return jsonify(C.asignar_fecha(turno_id, request.get_json(silent=True) or {}))
+
+
+
+@turnos_bp.patch("/<int:turno_id>/reprogramar")
+@requiere_rol("administrativo")
+def reprogramar(turno_id):
+    return jsonify(C.reprogramar_turno(turno_id, request.get_json(silent=True) or {}))
+
+
+@turnos_bp.patch("/<int:turno_id>/cancelar")
+@requiere_rol("administrativo")
+def cancelar(turno_id):
+    return jsonify(C.cancelar_turno(turno_id))

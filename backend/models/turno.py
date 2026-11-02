@@ -1,23 +1,32 @@
+
 """Modelo de Turno: estados válidos, reglas de transición y forma de los datos.
 La tabla está en database/mi_turno_a_mano.sql."""
+
 from datetime import datetime, timezone
 
 ESPECIALIDADES = (
     "clinica medica", "cardiologia", "traumatologia", "oftalmologia",
-    "dermatologia", "ginecologia", "neurologia", "odontologia",
+    "dermatologia", "ginecologia", "neurologia", "odontologia", "urologia",
+)  # "urologia" va última: "neurologia" la contiene y se tiene que reconocer antes
+
+SOLICITADO, PROPUESTO, CONFIRMADO, RECHAZADO, CANCELADO = (
+    "solicitado", "propuesto", "confirmado", "rechazado", "cancelado",
 )
 
-SOLICITADO, PROPUESTO, CONFIRMADO, RECHAZADO = (
-    "solicitado", "propuesto", "confirmado", "rechazado",
-)
+ESTADOS = (SOLICITADO, PROPUESTO, CONFIRMADO, RECHAZADO, CANCELADO)
 
-# estado actual -> estados a los que puede pasar
+# Estado actual -> estados a los que puede pasar.
 TRANSICIONES = {
-    SOLICITADO: (PROPUESTO,),
-    PROPUESTO: (CONFIRMADO, RECHAZADO),
-    CONFIRMADO: (),
+    SOLICITADO: (PROPUESTO, CANCELADO),
+    PROPUESTO: (CONFIRMADO, RECHAZADO, CANCELADO),
+    CONFIRMADO: (CANCELADO,),  # Historia 4: el administrativo puede suspender un turno.
     RECHAZADO: (),
+    CANCELADO: (),
 }
+
+# Turnos con fecha que el administrativo puede reprogramar o avisar (historia 4).
+# Al reprogramar, el turno vuelve a "propuesto": el paciente tiene que aceptar la nueva fecha.
+CON_FECHA = (PROPUESTO, CONFIRMADO)
 
 
 def ahora_utc():
@@ -25,14 +34,17 @@ def ahora_utc():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def nuevo_turno(paciente_id, especialidad, motivo, origen):
+def nuevo_turno(paciente_id, especialidad, motivo, origen, fecha_hora=None):
+    """Si el paciente ya eligió día y horario, el turno nace confirmado.
+    Si no, nace 'solicitado' y el administrativo propone la fecha (circuito original)."""
     return {
         "paciente_id": paciente_id,
+        "medico_id": None,           # id del médico en usuarios; lo asigna el administrativo
         "especialidad": especialidad,
         "motivo": motivo,
         "origen": origen,            # "manual" | "voz"
-        "estado": SOLICITADO,
-        "fecha_hora": None,
+        "estado": CONFIRMADO if fecha_hora else SOLICITADO,
+        "fecha_hora": fecha_hora,
         "creado_en": ahora_utc(),
     }
 
@@ -41,6 +53,7 @@ def turno_a_json(fila):
     return {
         "id": fila["id"],
         "paciente_id": fila["paciente_id"],
+        "medico_id": fila.get("medico_id"),
         "especialidad": fila["especialidad"],
         "motivo": fila["motivo"],
         "origen": fila["origen"],

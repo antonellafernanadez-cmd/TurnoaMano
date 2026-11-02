@@ -1,0 +1,11 @@
+.avisos-intro { margin: 0 0 16px; color: var(--gris); }
+.avisos-vacio { text-align: center; color: var(--gris); }
+.aviso { display: flex; gap: 14px; padding: 14px 16px; margin-bottom: 14px; background: #fff; border-left: 6px solid var(--azul); border-radius: 14px; box-shadow: 0 4px 14px rgba(11, 63, 168, .10); }
+.aviso.leido { border-left-color: #b7c8ea; opacity: .8; }
+.aviso-icono { font-size: 1.8rem; }
+.aviso-cuerpo { flex: 1; }
+.aviso-cuerpo h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 1.2rem; }
+.aviso-cuerpo p { margin: 0 0 6px; line-height: 1.4; }
+.aviso-fecha { font-size: .95rem; color: var(--gris); }
+.nuevo { padding: 1px 10px; font-size: .85rem; color: #fff; background: var(--rojo); border-radius: 999px; }
+.aviso .btn-medio { margin-top: 8px; }

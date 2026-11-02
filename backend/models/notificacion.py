@@ -2,12 +2,17 @@
 La tabla está en database/mi_turno_a_mano.sql."""
 from models.turno import ahora_utc
 
-# Para qué es el aviso
-FECHA_PROPUESTA = "fecha_propuesta"   # el administrativo propuso fecha y hora de un turno
-RECORDATORIO = "recordatorio"         # recordatorio de un turno ya otorgado
-CAMBIO = "cambio"                     # cambio o demora de un turno (historia 4, sprint 2)
-TIPOS = (FECHA_PROPUESTA, RECORDATORIO, CAMBIO)
+FECHA_PROPUESTA = "fecha_propuesta"
+CONFIRMACION = "confirmacion"
+RECORDATORIO = "recordatorio"
+CAMBIO = "cambio"
 
+TIPOS = (
+    FECHA_PROPUESTA,
+    CONFIRMACION,
+    RECORDATORIO,
+    CAMBIO
+)
 
 def nueva_notificacion(paciente_id, turno_id, tipo, mensaje):
     return {

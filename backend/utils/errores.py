@@ -1,3 +1,4 @@
+import logging
 from flask import jsonify
 
 
@@ -16,5 +17,6 @@ def registrar_errores(app):
         return jsonify({"error": "Recurso no encontrado."}), 404
 
     @app.errorhandler(Exception)
-    def _500(_):
+    def _500(e):
+        logging.getLogger("app").exception("Error no controlado")
         return jsonify({"error": "Error interno del servidor."}), 500

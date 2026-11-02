@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
 from werkzeug.security import generate_password_hash
 
-from app import app
+from app import create_app
 from models.db import db
 from models.usuario import Usuario
 
@@ -16,6 +16,8 @@ USUARIOS = [
     ("administrativo", "Admin Prueba", "2610000001", "admin@test.com", "1001", "admin12345"),
     ("medico", "Medico Prueba", "2610000002", "medico@test.com", "2001", "medico12345"),
 ]
+
+app = create_app()
 
 with app.app_context():
     db.create_all()

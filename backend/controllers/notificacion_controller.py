@@ -2,10 +2,11 @@
 administrativo envíe recordatorios de turnos ya otorgados (historia de usuario 2)."""
 from flask import current_app
 
-from models.notificacion import RECORDATORIO, notificacion_a_json
-from models.turno import CONFIRMADO
+from models.notificacion import CAMBIO, RECORDATORIO, notificacion_a_json
+from models.turno import CON_FECHA, CONFIRMADO
 from utils.errores import ApiError
 from utils.formato import fecha_legible
+from utils.mensajes import MINUTOS_DEMORA, mensaje_demora
 
 
 def _repo():
@@ -37,3 +38,20 @@ def enviar_recordatorio(turno_id):
     if not canales:
         raise ApiError("No se pudo enviar el recordatorio: paciente no encontrado.", 404)
     return {"mensaje": "Recordatorio enviado.", "canales": canales}
+
+
+def enviar_aviso_demora(turno_id, datos):
+    """Historia de usuario 4: el administrativo avisa una demora con un mensaje predefinido."""
+    minutos = datos.get("minutos") if isinstance(datos, dict) else None
+    if isinstance(minutos, bool) or minutos not in MINUTOS_DEMORA:
+        raise ApiError(f"Los minutos de demora deben ser uno de: {', '.join(map(str, MINUTOS_DEMORA))}.", 400)
+    turno = current_app.config["TURNO_REPO"].obtener(turno_id)
+    if not turno:
+        raise ApiError("Turno no encontrado.", 404)
+    if turno["estado"] not in CON_FECHA:
+        raise ApiError("Solo se puede avisar una demora de un turno con fecha (propuesto o confirmado).", 409)
+    canales = current_app.config["NOTIFICADOR"].avisar(
+        turno["paciente_id"], turno_id, CAMBIO, mensaje_demora(turno, minutos))
+    if not canales:
+        raise ApiError("No se pudo enviar el aviso: paciente no encontrado.", 404)
+    return {"mensaje": "Aviso enviado.", "canales": canales}

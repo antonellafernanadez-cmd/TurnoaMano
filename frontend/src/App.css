@@ -1,0 +1,50 @@
+/* Estilos base de toda la app. Letra grande y alto contraste: el público son adultos mayores
+   (encuesta: 47% con dificultad visual). Los colores están en variables para cambiarlos en un solo lugar. */
+:root {
+  --azul: #0b3fa8;
+  --azul-oscuro: #0b1f4d;
+  --verde: #0d9488;
+  --violeta: #7c3aed;
+  --fondo: #f3f6fc;
+  --gris: #5b6b8c;
+  --rojo: #a11212;
+  --ok: #0a6b2a;
+  --foco: #f2b300;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--fondo); color: var(--azul-oscuro); font-size: 1.125rem; }
+button, input, select, textarea { font-family: inherit; }
+
+/* Contenedor de cada pantalla: angosto y centrado, como en un celular */
+.pantalla { max-width: 480px; margin: 0 auto; padding: 20px 18px 40px; }
+
+/* Botones */
+.btn {
+  display: block; width: 100%; margin-top: 16px; padding: 16px; font-size: 1.2rem; font-weight: 700;
+  color: #fff; background: var(--azul); border: 2px solid var(--azul); border-radius: 14px; cursor: pointer;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-secundario { background: #fff; color: var(--azul); }
+.btn-peligro { background: #fff; color: var(--rojo); border-color: var(--rojo); }
+.btn-peligro-lleno { background: var(--rojo); color: #fff; border-color: var(--rojo); }
+.btn:focus-visible, .link:focus-visible, .opcion:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+.link { background: none; border: none; padding: 0; color: var(--azul); font-weight: 700; font-size: 1rem; text-decoration: underline; cursor: pointer; }
+
+/* Mensajes */
+.msg-ok { color: var(--ok); font-weight: 700; margin-top: 16px; }
+.msg-error { color: var(--rojo); font-weight: 700; margin-top: 16px; }
+
+/* Texto para lectores de pantalla (no se ve, pero se lee en voz alta) */
+.solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Cabecera azul de las pantallas internas */
+.cabecera { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--azul); color: #fff; }
+.cabecera-titulo { margin: 0; font-size: 1.4rem; font-weight: 700; }
+.cabecera-volver { min-width: 44px; min-height: 44px; font-size: 1.6rem; color: #fff; background: rgba(255,255,255,.15); border: none; border-radius: 12px; cursor: pointer; }
+.cabecera-volver:focus-visible { outline: 4px solid var(--foco); outline-offset: 2px; }
+/* Responsive: la letra y el ancho crecen de forma gradual con la pantalla.
+   Celular (~360px): tamaño normal. Tablet y compu: más grande y más ancho, sin saltos. */
+html { font-size: clamp(16px, 0.9vw + 12px, 22px); }
+.pantalla, .inicio, .auth { max-width: 32rem; }
+.bienvenida-contenido { max-width: 28rem; }
