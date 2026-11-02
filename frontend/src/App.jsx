@@ -194,15 +194,38 @@ export default function App() {
 
   // Si no hay sesión iniciada, muestra las pantallas de autenticación.
   if (!autenticado) {
-    if (vistaAuth === "login") {
-      return (
-        <Login
-          onLogin={() => setAutenticado(true)}
-          irARegistro={() => setVistaAuth("registro")}
-          volver={() => setVistaAuth("bienvenida")}
-        />
-      );
-    }
+    if (
+  vistaAuth === "login" ||
+  vistaAuth === "loginMedico" ||
+  vistaAuth === "loginAdministrativo"
+) {
+  const configuracion = {
+    login: {
+      rol: "paciente",
+      titulo: "Iniciar sesión",
+    },
+    loginMedico: {
+      rol: "medico",
+      titulo: "Acceso para médicos",
+    },
+    loginAdministrativo: {
+      rol: "administrativo",
+      titulo: "Acceso administrativo",
+    },
+  };
+
+  const acceso = configuracion[vistaAuth];
+
+  return (
+    <Login
+      rolEsperado={acceso.rol}
+      titulo={acceso.titulo}
+      onLogin={() => setAutenticado(true)}
+      irARegistro={() => setVistaAuth("registro")}
+      volver={() => setVistaAuth("bienvenida")}
+    />
+  );
+}
 
     if (vistaAuth === "registro") {
       return (
@@ -301,15 +324,21 @@ export default function App() {
       );
     }
 
-    return (
-      <Bienvenida
-        irALogin={() => setVistaAuth("login")}
-        irARegistro={() => setVistaAuth("registro")}
-        irALoginCuidador={() =>
-          setVistaAuth("loginCuidador")
-        }
-      />
-    );
+  return (
+  <Bienvenida
+    irALogin={() => setVistaAuth("login")}
+    irARegistro={() => setVistaAuth("registro")}
+    irALoginCuidador={() =>
+      setVistaAuth("loginCuidador")
+    }
+    irALoginMedico={() =>
+      setVistaAuth("loginMedico")
+    }
+    irALoginAdministrativo={() =>
+      setVistaAuth("loginAdministrativo")
+    }
+  />
+);
   }
 
   // Datos del usuario autenticado.

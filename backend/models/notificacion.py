@@ -1,18 +1,35 @@
-"""Modelo de Notificación: los avisos que recibe el paciente (historias de usuario 2, 3 y 4).
-La tabla está en database/mi_turno_a_mano.sql."""
+"""Modelo de Notificación: los avisos que recibe el paciente
+(historias de usuario 2, 3 y 4).
+
+La tabla está en database/mi_turno_a_mano.sql.
+"""
+
 from models.turno import ahora_utc
 
-# Para qué es el aviso
-FECHA_PROPUESTA = "fecha_propuesta"   # el administrativo propuso fecha y hora de un turno
-RECORDATORIO = "recordatorio"         # recordatorio de un turno ya otorgado
-CAMBIO = "cambio"                     # cambio o demora de un turno (historia 4, sprint 2)
-MEDICACION = "medicacion"             # recordatorio de toma de medicación (historia 3): no depende de un turno
 
-TIPOS = (FECHA_PROPUESTA, RECORDATORIO, CAMBIO, MEDICACION)
+# Tipos de notificaciones
+FECHA_PROPUESTA = "fecha_propuesta"
+RECORDATORIO = "recordatorio"
+CAMBIO = "cambio"
+CONFIRMACION = "confirmacion"
+MEDICACION = "medicacion"
+
+
+TIPOS = (
+    FECHA_PROPUESTA,
+    RECORDATORIO,
+    CAMBIO,
+    CONFIRMACION,
+    MEDICACION,
+)
 
 
 def nueva_notificacion(paciente_id, turno_id, tipo, mensaje):
-    """turno_id es None cuando el aviso no está ligado a un turno (por ejemplo, la medicación)."""
+    """Crea una notificación.
+
+    turno_id puede ser None cuando el aviso no está asociado
+    a un turno, por ejemplo, un recordatorio de medicación.
+    """
     return {
         "paciente_id": paciente_id,
         "turno_id": turno_id,
@@ -24,6 +41,7 @@ def nueva_notificacion(paciente_id, turno_id, tipo, mensaje):
 
 
 def notificacion_a_json(fila):
+    """Convierte una fila de notificación a formato JSON."""
     return {
         "id": fila["id"],
         "paciente_id": fila["paciente_id"],

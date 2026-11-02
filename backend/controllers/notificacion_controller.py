@@ -14,17 +14,41 @@ def _repo():
 
 
 def mis_notificaciones(usuario, solo_no_leidas=False):
-    filas = _repo().listar_por_paciente(usuario["id"], solo_no_leidas)
+    from models.usuario import Usuario
+
+    paciente = Usuario.query.filter_by(
+        identificador=usuario["id"],
+        rol="paciente"
+    ).first()
+
+    if not paciente:
+        return []
+
+    filas = _repo().listar_por_paciente(
+        str(paciente.id),
+        solo_no_leidas
+    )
+
     return [notificacion_a_json(f) for f in filas]
 
 
 def marcar_leida(usuario, notificacion_id):
-    aviso = _repo().obtener(notificacion_id)
-    # Si no existe o es de otro paciente, la respuesta es la misma: no se revela que existe.
-    if not aviso or aviso["paciente_id"] != usuario["id"]:
-        raise ApiError("Notificación no encontrada.", 404)
-    return notificacion_a_json(_repo().marcar_leida(notificacion_id))
+    from models.usuario import Usuario
 
+    paciente = Usuario.query.filter_by(
+        identificador=usuario["id"],
+        rol="paciente"
+    ).first()
+
+    if not paciente:
+        raise ApiError("Notificación no encontrada.", 404)
+
+    aviso = _repo().obtener(notificacion_id)
+
+    if not aviso or str(aviso["paciente_id"]) != str(paciente.id):
+        raise ApiError("Notificación no encontrada.", 404)
+
+    return notificacion_a_json(_repo().marcar_leida(notificacion_id))
 
 def enviar_recordatorio(turno_id):
     turno = current_app.config["TURNO_REPO"].obtener(turno_id)

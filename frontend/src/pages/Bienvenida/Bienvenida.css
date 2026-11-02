@@ -14,3 +14,46 @@
   background: radial-gradient(ellipse at 30% 0%, #bfe8e2 0%, #d6eef0 55%, #e6f1ff 100%); opacity: .8;
 }
 @media (max-width: 380px) { .bienvenida h1 { font-size: 2.3rem; } }
+
+
+.accesos-profesionales {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.accesos-profesionales button {
+  border: none;
+  background: transparent;
+  color: #287b78;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.accesos-profesionales button:hover,
+.accesos-profesionales button:focus-visible {
+  border-bottom-color: #287b78;
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  .accesos-profesionales {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .accesos-profesionales button {
+    font-size: 0.75rem;
+  }
+}
+
