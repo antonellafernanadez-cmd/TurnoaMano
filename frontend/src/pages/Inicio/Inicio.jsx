@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Logo from "../../components/Logo";
 import { hablar, callar, normalizarVoz } from "../../utils/voz";
@@ -36,6 +37,7 @@ export default function Inicio({
       "Esta es la pantalla principal de la aplicación.",
       "Tenés dos opciones principales. Pedir turno, para solicitar un nuevo turno médico. O Mis turnos, para consultar los turnos que ya tenés programados.",
       `También tenés la sección Recordatorios, donde podés consultar los avisos relacionados con tus turnos. Actualmente tenés ${sinLeer} ${sinLeer === 1 ? "aviso pendiente de leer" : "avisos pendientes de leer"}.`,
+      "También tenés la opción Mi cuidador, donde vas a poder vincular a una persona de confianza para que consulte tus turnos y avisos.",
     ];
 
     if (avisosPendientes.length > 0) {
@@ -53,7 +55,7 @@ export default function Inicio({
     }
 
     partes.push(
-      "¿Qué querés hacer hoy? Para solicitar un turno, decí pedir turno. Para consultar tus turnos, decí mis turnos. Para volver a escuchar tus avisos, decí avisos. También podés elegir cualquiera de las opciones con los botones de la pantalla."
+      "¿Qué querés hacer hoy? Para solicitar un turno, decí pedir turno. Para consultar tus turnos, decí mis turnos. Para volver a escuchar tus avisos, decí avisos. Para administrar tu cuidador, decí mi cuidador. También podés elegir cualquiera de las opciones con los botones de la pantalla."
     );
 
     return partes.join(" ");
@@ -100,6 +102,20 @@ export default function Inicio({
     }
 
     if (
+      dicho.includes("mi cuidador") ||
+      dicho.includes("cuidador")
+    ) {
+      setEstadoVoz("navegando");
+
+      hablar(
+        "Vamos a la sección Mi cuidador.",
+        () => irA("cuidador")
+      );
+
+      return;
+    }
+
+    if (
       dicho.includes("aviso") ||
       dicho.includes("mensaje") ||
       dicho.includes("recordatorio")
@@ -127,7 +143,7 @@ export default function Inicio({
     }
 
     hablar(
-      "No entendí lo que necesitás. Podés decir pedir turno, mis turnos o avisos. Te escucho nuevamente.",
+      "No entendí lo que necesitás. Podés decir pedir turno, mis turnos, avisos o mi cuidador. Te escucho nuevamente.",
       () => escucharRef.current?.()
     );
   };
@@ -164,7 +180,7 @@ export default function Inicio({
       setEstadoVoz("escuchando");
 
       setMensajeVoz(
-        "Te escucho. Podés decir pedir turno, mis turnos o avisos."
+        "Te escucho. Podés decir pedir turno, mis turnos, avisos o mi cuidador."
       );
     };
 
@@ -227,7 +243,7 @@ export default function Inicio({
         setEstadoVoz("esperando");
 
         hablar(
-          "No te escuché. Decime pedir turno, mis turnos o avisos.",
+          "No te escuché. Decime pedir turno, mis turnos, avisos o mi cuidador.",
           () => escucharRef.current?.()
         );
       }
@@ -430,6 +446,28 @@ export default function Inicio({
 
           <small className="banda-chico">
             Recibí avisos de tus turnos
+          </small>
+        </span>
+
+        <span className="banda-flecha" aria-hidden="true">
+          ›
+        </span>
+      </button>
+
+      <button
+        type="button"
+        className="banda banda-violeta"
+        onClick={() => irA("cuidador")}
+      >
+        <span className="banda-icono" aria-hidden="true">
+          🤝
+        </span>
+
+        <span>
+          Mi cuidador
+          <br />
+          <small className="banda-chico">
+            Vinculá a una persona de confianza
           </small>
         </span>
 
