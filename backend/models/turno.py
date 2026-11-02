@@ -39,7 +39,7 @@ def nuevo_turno(paciente_id, especialidad, motivo, origen, fecha_hora=None):
     Si no, nace 'solicitado' y el administrativo propone la fecha (circuito original)."""
     return {
         "paciente_id": paciente_id,
-        "medico_id": None,           # id del médico en usuarios; lo asigna el administrativo
+        "medico_id": None,           # matrícula (identificador) del médico; lo asigna el administrativo
         "especialidad": especialidad,
         "motivo": motivo,
         "origen": origen,            # "manual" | "voz"

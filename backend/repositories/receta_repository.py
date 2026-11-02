@@ -87,6 +87,70 @@ class RecetaRepository:
         finally:
             conexion.close()
 
+    def crear_con_plan(self, receta, plan_items):
+        conexion = self._conectar()
+
+        try:
+            with conexion.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO recetas
+                        (paciente_id, medico_id, indicaciones, activa, creado_en)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (
+                        receta["paciente_id"],
+                        receta["medico_id"],
+                        receta["indicaciones"],
+                        receta["activa"],
+                        receta["creado_en"],
+                    ),
+                )
+
+                receta_id = cur.lastrowid
+
+                for item in receta["items"]:
+                    cur.execute(
+                        """
+                        INSERT INTO receta_items
+                            (receta_id, medicamento, dosis, horario)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        (
+                            receta_id,
+                            item["medicamento"],
+                            item["dosis"],
+                            item["horario"],
+                        ),
+                    )
+
+                for item in plan_items:
+                    cur.execute(
+                        """
+                        INSERT INTO plan_medicacion
+                            (paciente_id, medicamento, dosis, horario, activo, creado_en)
+                        VALUES (%s, %s, %s, %s, 1, %s)
+                        """,
+                        (
+                            item["paciente_id"],
+                            item["medicamento"],
+                            item["dosis"],
+                            item["horario"],
+                            item["creado_en"],
+                        ),
+                    )
+
+            conexion.commit()
+            receta["id"] = receta_id
+            return receta
+
+        except Exception:
+            conexion.rollback()
+            raise
+
+        finally:
+            conexion.close()
+
     def desactivar(self, receta_id, medico_id):
         conexion = self._conectar()
         try:

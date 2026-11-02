@@ -92,8 +92,16 @@ def test_si_falla_el_aviso_la_fecha_se_propone_igual():
     assert repo.listar_por_paciente("12345678") == []
 
 
-def test_aceptar_o_rechazar_no_genera_un_aviso_de_fecha():
+def test_aceptar_genera_aviso_de_confirmacion_y_rechazar_no():
+    # Al aceptar, el paciente recibe el aviso de confirmación (el más nuevo primero).
     client, repo = armar()
     tid, _ = pedir_y_proponer(client)
     client.patch(f"/api/turnos/{tid}/respuesta", json={"respuesta": "aceptar"}, headers=token("12345678", "paciente"))
-    assert len(repo.listar_por_paciente("12345678")) == 1           # sigue siendo solo el de la fecha propuesta
+    tipos = [a["tipo"] for a in repo.listar_por_paciente("12345678")]
+    assert tipos == ["confirmacion", "fecha_propuesta"]
+
+    # Al rechazar no se genera ningún aviso nuevo: sigue solo el de la fecha propuesta.
+    client, repo = armar()
+    tid, _ = pedir_y_proponer(client)
+    client.patch(f"/api/turnos/{tid}/respuesta", json={"respuesta": "rechazar"}, headers=token("12345678", "paciente"))
+    assert len(repo.listar_por_paciente("12345678")) == 1

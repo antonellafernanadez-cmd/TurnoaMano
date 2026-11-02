@@ -1,4 +1,5 @@
 
+
 import os
 from datetime import timedelta
 
@@ -39,7 +40,7 @@ def _buscar_destinatario(paciente_id):
 
 
 def _listar_medicos():
-    """Médicos para asignar a los turnos: solo id y nombre."""
+    """Médicos para asignar a los turnos: id = matrícula (identificador)."""
     from models.usuario import Usuario
 
     medicos = (
@@ -50,15 +51,17 @@ def _listar_medicos():
     )
 
     return [
-        {"id": str(m.id), "nombre": m.nombre}
+        {"id": m.identificador, "nombre": m.nombre}
         for m in medicos
     ]
 
 
 def _buscar_pacientes(texto):
-    """Pacientes por DNI o nombre (máximo 20)."""
+    """Pacientes por DNI o nombre (máximo 20).
+    Devuelve solo ID, nombre y DNI: no incluye teléfonos.
+    """
     from models.usuario import Usuario
-    from models.db import db
+
     filas = (
         Usuario.query.filter(
             Usuario.rol == "paciente",
@@ -71,8 +74,13 @@ def _buscar_pacientes(texto):
         .limit(20)
         .all()
     )
+
     return [
-        {"id": str(u.id), "nombre": u.nombre, "identificador": u.identificador}
+        {
+            "id": str(u.id),
+            "nombre": u.nombre,
+            "identificador": u.identificador
+        }
         for u in filas
     ]
 
@@ -82,7 +90,9 @@ def create_app(
     notificacion_repo=None,
     destinatarios=None,
     canales_extra=None,
-    medicos=None
+    medicos=None,
+    plan_repo=None,
+    pacientes=None,
 ):
     """PATRÓN FACTORY: create_app arma la aplicación; los tests le inyectan
     repositorios y canales falsos.
@@ -118,12 +128,14 @@ def create_app(
 
     app.register_blueprint(auth_bp)
 
+    # Repositorio de turnos.
     if turno_repo is None:
         from repositories.turno_repository import TurnoRepository
         turno_repo = TurnoRepository()
 
     app.config["TURNO_REPO"] = turno_repo
 
+    # Repositorio de notificaciones.
     if notificacion_repo is None:
         from repositories.notificacion_repository import NotificacionRepository
         notificacion_repo = NotificacionRepository()
@@ -143,17 +155,25 @@ def create_app(
         destinatarios or _buscar_destinatario
     )
 
+    # Funciones para buscar médicos y pacientes.
     app.config["MEDICOS"] = medicos or _listar_medicos
-    app.config["PACIENTES"] = _buscar_pacientes
+    app.config["PACIENTES"] = pacientes or _buscar_pacientes
 
-    from repositories.plan_medicacion_repository import PlanMedicacionRepository
+    # Repositorio del plan de medicación.
+    if plan_repo is None:
+        from repositories.plan_medicacion_repository import PlanMedicacionRepository
+        plan_repo = PlanMedicacionRepository()
+
+    app.config["PLAN_REPO"] = plan_repo
+
+    # Repositorio de recetas.
     from repositories.receta_repository import RecetaRepository
-    app.config["PLAN_REPO"] = PlanMedicacionRepository()
     app.config["RECETA_REPO"] = RecetaRepository()
 
     # Registra los avisos automáticos en el bus de eventos.
     from events import suscriptores  # noqa: F401
 
+    # Registro de rutas.
     from routes.medico_routes import medicos_bp
     from routes.notificacion_routes import notificaciones_bp
     from routes.turno_routes import turnos_bp
@@ -184,10 +204,13 @@ def verificar_base(app):
         "usuarios (con intentos_fallidos y bloqueado_hasta)": (
             "SELECT id, intentos_fallidos, bloqueado_hasta FROM usuarios LIMIT 1"
         ),
-        "turnos": "SELECT id FROM turnos LIMIT 1",
+        "turnos (con medico_id)": (
+            "SELECT id, medico_id FROM turnos LIMIT 1"
+        ),
         "notificaciones": "SELECT id FROM notificaciones LIMIT 1",
         "plan_medicacion": "SELECT id FROM plan_medicacion LIMIT 1",
         "recetas": "SELECT id FROM recetas LIMIT 1",
+        "receta_items": "SELECT id FROM receta_items LIMIT 1",
     }
 
     with app.app_context():
@@ -200,11 +223,11 @@ def verificar_base(app):
 
                 print(
                     f"\n[ERROR] La base '{Config.DB_NAME}' no está lista: "
-                    f"falta la tabla {nombre}."
+                    f"falta la tabla o columna {nombre}."
                 )
                 print(
-                    "        Ejecutá database/mi_turno_a_mano.sql "
-                    "y revisá DB_NAME en el .env."
+                    "        Revisá el esquema de la base de datos "
+                    "y las variables de configuración en el .env."
                 )
                 print(
                     f"        Detalle: {type(e).__name__}: "

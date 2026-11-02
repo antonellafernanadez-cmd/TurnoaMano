@@ -62,3 +62,23 @@ class FakeNotificacionRepository:
     def marcar_leida(self, notificacion_id):
         self._filas[notificacion_id]["leida"] = True
         return self.obtener(notificacion_id)
+
+
+class FakePlanMedicacionRepository:
+    """Repositorio en memoria con la misma interfaz que PlanMedicacionRepository."""
+
+    def __init__(self):
+        self._filas, self._ids = {}, count(1)
+
+    def crear(self, item):
+        item["id"] = next(self._ids)
+        self._filas[item["id"]] = dict(item)
+        return item
+
+    def obtener(self, item_id):
+        fila = self._filas.get(item_id)
+        return dict(fila) if fila else None
+
+    def listar_por_paciente(self, paciente_id):
+        filas = [dict(f) for f in self._filas.values() if f["paciente_id"] == paciente_id and f["activo"]]
+        return sorted(filas, key=lambda f: (f["horario"], f["medicamento"]))

@@ -1,3 +1,4 @@
+
 import Logo from "../../components/Logo";
 import "./Bienvenida.css";
 
@@ -5,9 +6,27 @@ export default function Bienvenida({
   irALogin,
   irARegistro,
   irALoginCuidador,
+  irALoginMedico,
+  irALoginAdministrativo,
 }) {
   return (
     <main className="bienvenida">
+      <nav className="accesos-profesionales" aria-label="Accesos profesionales">
+        <button
+          type="button"
+          onClick={irALoginMedico}
+        >
+          Médicos registrados
+        </button>
+
+        <button
+          type="button"
+          onClick={irALoginAdministrativo}
+        >
+          Administrativos registrados
+        </button>
+      </nav>
+
       <div className="bienvenida-contenido">
         <Logo tamano={150} />
 
