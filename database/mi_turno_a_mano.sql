@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS notificaciones (
         'fecha_propuesta',
         'recordatorio',
         'cambio',
-        'confirmacion'
+        'confirmacion',
+        "medicacion"
     ) NOT NULL,
     mensaje     VARCHAR(500) NOT NULL,
     leida       TINYINT(1) NOT NULL DEFAULT 0,
