@@ -46,3 +46,15 @@ export const terminaConComando = (texto) => CIERRE.test(texto.trim());
 
 // Saca la palabra de cierre y los espacios de más: "quiero cardiología, listo" -> "quiero cardiología"
 export const limpiarDicho = (texto) => texto.replace(CIERRE, "").replace(/\s+/g, " ").trim();
+// Normaliza lo reconocido por el micrófono para comparar palabras
+// sin tildes ni diferencias entre mayúsculas y minúsculas.
+export function normalizarVoz(texto = "") {
+  return String(texto)
+    .toLocaleLowerCase("es-AR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ñ/g, "n")
+    .replace(/[^a-z0-9:\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}

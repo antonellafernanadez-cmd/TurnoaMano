@@ -52,3 +52,30 @@
 .listo-texto { margin: 0 0 12px; color: var(--gris); }
 .check { display: grid; place-items: center; width: 84px; height: 84px; margin: 20px auto 8px; font-size: 3rem; color: #fff; background: var(--ok); border-radius: 50%; }
 .link-centro { display: block; margin: 18px auto 0; }
+
+/* Disponibilidad de fechas: verde si tiene al menos un horario libre, gris si no. */
+.ayuda-disponibilidad { margin: -2px 0 10px; color: var(--gris); font-size: .95rem; }
+.dia.disponible { color: #176b3a; background: #e4f5e9; border-color: #69b984; }
+.dia.disponible.activa { color: #fff; background: #21834a; border-color: #176b3a; }
+.dia.no-disponible { color: #8b929b; background: #edf0f2; border-color: #d5d9dd; opacity: 1; cursor: not-allowed; }
+.dia small { margin-top: 3px; font-size: .65rem; font-weight: 600; }
+.voz-continuar { margin: 14px 0; }
+.hora.disponible {
+  color: #176b3a;
+  background: #e4f5e9;
+  border-color: #69b984;
+}
+
+.hora.disponible.activa {
+  color: #fff;
+  background: #21834a;
+  border-color: #176b3a;
+}
+
+.hora.no-disponible {
+  color: #8b929b;
+  background: #edf0f2;
+  border-color: #d5d9dd;
+  opacity: 1;
+  cursor: not-allowed;
+}

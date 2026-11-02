@@ -23,3 +23,59 @@
 .insignia { margin-left: 8px; padding: 2px 10px; font-size: .95rem; color: #fff; background: var(--rojo); border-radius: 999px; }
 @media (max-width: 380px) { .inicio-botones { grid-template-columns: 1fr; } .gran { min-height: 150px; } }
 .banda-chico { font-weight: 400; color: var(--gris); font-size: .95rem; }
+/* Panel del asistente de voz */
+.inicio-asistente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px;
+  background: #fff;
+  border: 2px solid #0d9488;
+  border-radius: 16px;
+}
+
+.asistente-icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  font-size: 1.6rem;
+  background: #d7f3ef;
+  border-radius: 50%;
+}
+
+.asistente-contenido {
+  flex: 1;
+  min-width: 0;
+}
+
+.asistente-contenido strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.asistente-contenido p {
+  margin: 4px 0 0;
+  color: var(--gris);
+  font-size: .95rem;
+  line-height: 1.35;
+}
+
+.asistente-repetir {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font-size: 1.35rem;
+  background: #e8f0ff;
+  border: 1px solid #b7c8ea;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.inicio-estado-voz {
+  margin: 0 0 14px;
+  color: var(--gris);
+  font-size: .9rem;
+}

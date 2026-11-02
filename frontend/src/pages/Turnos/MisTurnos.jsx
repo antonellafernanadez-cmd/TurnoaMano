@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
-import { cancelarTurno, obtenerMisTurnos, responderTurno } from "../../api/turnosApi";
+
+import { useEffect, useRef, useState } from "react";
+import {
+  cancelarTurno,
+  obtenerMisTurnos,
+} from "../../api/turnosApi";
 import { fechaLarga } from "../../utils/fechas";
+import { hablar, callar, normalizarVoz } from "../../utils/voz";
 import "./Turnos.css";
 import "./MisTurnos.css";
 
@@ -13,109 +18,342 @@ const ETIQUETA = {
 };
 
 const ESPECIALIDAD = {
-  "clinica medica": { nombre: "Clínica médica", icono: "🩺" }, cardiologia: { nombre: "Cardiología", icono: "❤️" },
-  traumatologia: { nombre: "Traumatología", icono: "🦴" }, oftalmologia: { nombre: "Oftalmología", icono: "👁️" },
-  dermatologia: { nombre: "Dermatología", icono: "🧴" }, ginecologia: { nombre: "Ginecología", icono: "🌸" },
-  neurologia: { nombre: "Neurología", icono: "🧠" }, odontologia: { nombre: "Odontología", icono: "🦷" },
+  "clinica medica": { nombre: "Clínica médica", icono: "🩺" },
+  cardiologia: { nombre: "Cardiología", icono: "❤️" },
+  traumatologia: { nombre: "Traumatología", icono: "🦴" },
+  oftalmologia: { nombre: "Oftalmología", icono: "👁️" },
+  dermatologia: { nombre: "Dermatología", icono: "🧴" },
+  ginecologia: { nombre: "Ginecología", icono: "🌸" },
+  neurologia: { nombre: "Neurología", icono: "🧠" },
+  odontologia: { nombre: "Odontología", icono: "🦷" },
   urologia: { nombre: "Urología", icono: "💧" },
 };
 
-// Un turno es "próximo" si todavía está vigente; el resto va al historial.
-const esProximo = (t) => {
-  if (t.estado === "solicitado" || t.estado === "propuesto") return true;
-  return t.estado === "confirmado" && t.fecha_hora && new Date(t.fecha_hora) >= new Date();
+const obtenerEspecialidad = (clave) => {
+  const normalizada = normalizarVoz(clave || "");
+  return (
+    Object.entries(ESPECIALIDAD).find(
+      ([nombre]) => normalizarVoz(nombre) === normalizada
+    )?.[1] || { nombre: clave || "Consulta médica", icono: "🩺" }
+  );
 };
-const porFecha = (a, b) => (a.fecha_hora || "9999").localeCompare(b.fecha_hora || "9999");
 
-export default function MisTurnos({ onPedir }) {
-  const [turnos, setTurnos] = useState([]);
-  const [error, setError] = useState("");
+const esProximo = (turno) => {
+  if (turno.estado === "solicitado" || turno.estado === "propuesto") {
+    return true;
+  }
+
+  return (
+    turno.estado === "confirmado" &&
+    turno.fecha_hora &&
+    new Date(turno.fecha_hora) >= new Date()
+  );
+};
+
+const porFecha = (a, b) => {
+  if (!a.fecha_hora) return 1;
+  if (!b.fecha_hora) return -1;
+  return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+};
+
+export default function MisTurnos({ onPedir, onInicio }) {
+  const [turno, setTurno] = useState(null);
   const [cargando, setCargando] = useState(true);
-  const [pestana, setPestana] = useState("proximos");
-  const [confirmando, setConfirmando] = useState(null); // id del turno que se está por cancelar
+  const [error, setError] = useState("");
   const [ocupado, setOcupado] = useState(false);
+  const [escuchando, setEscuchando] = useState(false);
 
-  const cargar = () =>
-    obtenerMisTurnos()
-      .then((t) => { setTurnos(t); setError(""); })
-      .catch(() => setError("No pudimos cargar tus turnos."))
-      .finally(() => setCargando(false));
+  const reconocimientoRef = useRef(null);
+  const iniciadoRef = useRef(false);
+  const procesandoRef = useRef(false);
 
-  useEffect(() => { cargar(); }, []);
+  const volverAlInicio = () => {
+    callar();
+    reconocimientoRef.current?.abort();
+    onInicio?.();
+  };
 
-  const hacer = async (accion) => {
-    if (ocupado) return;
+  const finalizarConVoz = (texto) => {
+    hablar(texto, () => {
+      volverAlInicio();
+    });
+  };
+
+  const responder = async (respuesta) => {
+    if (procesandoRef.current || ocupado) return;
+
+    procesandoRef.current = true;
+    callar();
+    reconocimientoRef.current?.abort();
+    setEscuchando(false);
+
+    if (respuesta === "no") {
+      finalizarConVoz(
+        "Está bien. Tu turno seguirá como está. Volvemos a la pantalla principal."
+      );
+      return;
+    }
+
     setOcupado(true);
+
     try {
-      await accion();
-      await cargar();
+      await cancelarTurno(turno.id);
+
+      finalizarConVoz(
+        "Tu turno fue cancelado correctamente. Volvemos a la pantalla principal."
+      );
     } catch (e) {
-      setError(e.response?.data?.error || "No pudimos completar la acción.");
-    } finally {
+      procesandoRef.current = false;
       setOcupado(false);
-      setConfirmando(null);
+
+      const mensaje =
+        e.response?.data?.error ||
+        "No pudimos cancelar el turno. Por favor, intentá nuevamente.";
+
+      setError(mensaje);
+      hablar(mensaje);
     }
   };
 
-  const proximos = turnos.filter(esProximo).sort(porFecha);
-  const historial = turnos.filter((t) => !esProximo(t)).sort((a, b) => porFecha(b, a));
-  const lista = pestana === "proximos" ? proximos : historial;
+  const escucharRespuesta = () => {
+    const Reconocimiento =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!Reconocimiento) {
+      setEscuchando(false);
+      return;
+    }
+
+    const reconocimiento = new Reconocimiento();
+    reconocimientoRef.current = reconocimiento;
+
+    reconocimiento.lang = "es-AR";
+    reconocimiento.continuous = false;
+    reconocimiento.interimResults = false;
+
+    reconocimiento.onresult = (evento) => {
+      const texto = normalizarVoz(
+        Array.from(evento.results)
+          .map((resultado) => resultado[0].transcript)
+          .join(" ")
+      );
+
+      if (
+        /\b(si|sí|quiero|cancelar|cancelalo|cancelarlo|dale)\b/.test(texto)
+      ) {
+        responder("si");
+      } else if (
+        /\b(no|mantener|dejalo|dejarlo|conservar)\b/.test(texto)
+      ) {
+        responder("no");
+      } else {
+        setEscuchando(false);
+        hablar(
+          "No pude reconocer tu respuesta. Podés decir sí o no, o usar los botones de la pantalla."
+        );
+      }
+    };
+
+    reconocimiento.onerror = () => {
+      setEscuchando(false);
+    };
+
+    reconocimiento.onend = () => {
+      setEscuchando(false);
+    };
+
+    try {
+      setEscuchando(true);
+      reconocimiento.start();
+    } catch {
+      setEscuchando(false);
+    }
+  };
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerMisTurnos()
+      .then((lista) => {
+        if (!activo) return;
+
+        const proximos = (Array.isArray(lista) ? lista : [])
+          .filter(esProximo)
+          .sort(porFecha);
+
+        setTurno(proximos[0] || null);
+      })
+      .catch(() => {
+        if (activo) {
+          setError("No pudimos cargar tus turnos.");
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+      callar();
+      reconocimientoRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (cargando || error || iniciadoRef.current) return;
+
+    iniciadoRef.current = true;
+
+    if (!turno) {
+      finalizarConVoz(
+        "No tenés turnos próximos. Volvemos a la pantalla principal."
+      );
+      return;
+    }
+
+    const esp = obtenerEspecialidad(turno.especialidad);
+    const estado = ETIQUETA[turno.estado] || turno.estado;
+
+    const fecha = turno.fecha_hora
+      ? fechaLarga(turno.fecha_hora)
+      : "todavía sin fecha asignada";
+
+    const hora = turno.fecha_hora
+      ? String(turno.fecha_hora).split("T")[1]?.slice(0, 5)
+      : "";
+
+    const detalleHora = hora ? ` a las ${hora}` : "";
+
+    hablar(
+      `Tu próximo turno es de ${esp.nombre}, para el ${fecha}${detalleHora}. Su estado es: ${estado}. ¿Querés cancelar este turno? Decí sí o no.`,
+      escucharRespuesta
+    );
+  }, [cargando, error, turno]);
+
+  useEffect(() => {
+    return () => {
+      callar();
+      reconocimientoRef.current?.abort();
+    };
+  }, []);
+
+  if (cargando) {
+    return (
+      <main className="pantalla turnos">
+        <p>Cargando tu próximo turno…</p>
+      </main>
+    );
+  }
+
+  if (error && !turno) {
+    return (
+      <main className="pantalla turnos">
+        <p className="msg-error" role="alert">{error}</p>
+        <button
+          type="button"
+          className="btn"
+          onClick={volverAlInicio}
+        >
+          Volver al inicio
+        </button>
+      </main>
+    );
+  }
+
+  if (!turno) {
+    return (
+      <main className="pantalla turnos">
+        <section className="vacio">
+          <p>No tenés turnos próximos.</p>
+          <button
+            type="button"
+            className="btn"
+            onClick={onPedir}
+          >
+            Pedir un turno
+          </button>
+          <button
+            type="button"
+            className="btn btn-secundario"
+            onClick={volverAlInicio}
+          >
+            Volver al inicio
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  const esp = obtenerEspecialidad(turno.especialidad);
 
   return (
     <main className="pantalla turnos">
-      <div className="pestanas" role="tablist">
-        <button type="button" role="tab" aria-selected={pestana === "proximos"} className={pestana === "proximos" ? "activa" : ""} onClick={() => setPestana("proximos")}>
-          Próximos ({proximos.length})
-        </button>
-        <button type="button" role="tab" aria-selected={pestana === "historial"} className={pestana === "historial" ? "activa" : ""} onClick={() => setPestana("historial")}>
-          Historial ({historial.length})
-        </button>
-      </div>
+      <section className="tarjeta-turno">
+        <div className="tarjeta-fila">
+          <span className="fila-icono" aria-hidden="true">
+            {esp.icono}
+          </span>
 
-      {error && <p className="msg-error" role="alert">{error}</p>}
-      {cargando && !error && <p>Cargando tus turnos…</p>}
-      {!cargando && !error && lista.length === 0 && (
-        <div className="vacio">
-          <p>{pestana === "proximos" ? "No tenés turnos próximos." : "Todavía no tenés turnos anteriores."}</p>
-          {pestana === "proximos" && onPedir && <button type="button" className="btn" onClick={onPedir}>Pedir un turno</button>}
+          <div className="tarjeta-datos">
+            <h2>{esp.nombre}</h2>
+
+            {turno.fecha_hora && (
+              <p className="cuando">
+                {fechaLarga(turno.fecha_hora)}
+              </p>
+            )}
+
+            {turno.fecha_hora && (
+              <p>
+                Horario:{" "}
+                {String(turno.fecha_hora).split("T")[1]?.slice(0, 5)}
+              </p>
+            )}
+          </div>
         </div>
-      )}
 
-      {lista.map((t) => {
-        const esp = ESPECIALIDAD[t.especialidad] || { nombre: t.especialidad, icono: "🩺" };
-        return (
-          <section key={t.id} className="tarjeta-turno">
-            <div className="tarjeta-fila">
-              <span className="fila-icono" aria-hidden="true">{esp.icono}</span>
-              <div className="tarjeta-datos">
-                <h2>{esp.nombre}</h2>
-                {t.fecha_hora && <p className="cuando">{fechaLarga(t.fecha_hora)}</p>}
-              </div>
-            </div>
-            <p className={`chip chip-${t.estado}`}>{ETIQUETA[t.estado]}</p>
+        <p className={`chip chip-${turno.estado}`}>
+          {ETIQUETA[turno.estado] || turno.estado}
+        </p>
 
-            {t.estado === "propuesto" && (
-              <div className="acciones">
-                <button className="btn" disabled={ocupado} onClick={() => hacer(() => responderTurno(t.id, "aceptar"))}>Aceptar</button>
-                <button className="btn btn-secundario" disabled={ocupado} onClick={() => hacer(() => responderTurno(t.id, "rechazar"))}>Rechazar</button>
-              </div>
-            )}
+        <h3>¿Querés cancelar este turno?</h3>
 
-            {esProximo(t) && confirmando !== t.id && (
-              <button type="button" className="btn btn-peligro btn-medio" disabled={ocupado} onClick={() => setConfirmando(t.id)}>Cancelar turno</button>
-            )}
-            {confirmando === t.id && (
-              <div role="alertdialog" aria-label="Confirmar cancelación">
-                <p className="msg-error">¿Seguro que querés cancelar este turno?</p>
-                <div className="acciones">
-                  <button type="button" className="btn btn-peligro-lleno" disabled={ocupado} onClick={() => hacer(() => cancelarTurno(t.id))}>Sí, cancelar</button>
-                  <button type="button" className="btn btn-secundario" disabled={ocupado} onClick={() => setConfirmando(null)}>No, mantener</button>
-                </div>
-              </div>
-            )}
-          </section>
-        );
-      })}
+        <p>
+          Podés responder hablando o elegir una de las siguientes opciones.
+        </p>
+
+        {escuchando && (
+          <p className="msg-ok" role="status">
+            Te estoy escuchando…
+          </p>
+        )}
+
+        {error && (
+          <p className="msg-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="acciones">
+          <button
+            type="button"
+            className="btn btn-peligro-lleno"
+            disabled={ocupado}
+            onClick={() => responder("si")}
+          >
+            {ocupado ? "Cancelando…" : "Sí, cancelar turno"}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secundario"
+            disabled={ocupado}
+            onClick={() => responder("no")}
+          >
+            No, mantener turno
+          </button>
+        </div>
+      </section>
     </main>
   );
 }
