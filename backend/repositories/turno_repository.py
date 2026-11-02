@@ -60,6 +60,13 @@ class TurnoRepository:
             "SELECT * FROM turnos" + donde + " ORDER BY fecha_hora IS NULL, fecha_hora, creado_en DESC",
             tuple(params), muchos=True)
 
+    def ocupados(self, especialidad, desde, hasta):
+        """Turnos con fecha de esa especialidad entre dos fechas: [{"id", "fecha_hora"}]."""
+        return self._ejecutar(
+            "SELECT id, fecha_hora FROM turnos WHERE especialidad = %s "
+            "AND estado IN ('propuesto', 'confirmado') AND fecha_hora BETWEEN %s AND %s",
+            (especialidad, desde, hasta), muchos=True)
+
     def actualizar(self, turno_id, campos):
         if not set(campos) <= COLUMNAS_EDITABLES:
             raise ValueError("Columna no editable.")

@@ -1,22 +1,25 @@
+
 """Modelo de Turno: estados válidos, reglas de transición y forma de los datos.
 La tabla está en database/mi_turno_a_mano.sql."""
+
 from datetime import datetime, timezone
 
 ESPECIALIDADES = (
     "clinica medica", "cardiologia", "traumatologia", "oftalmologia",
-    "dermatologia", "ginecologia", "neurologia", "odontologia",
-)
+    "dermatologia", "ginecologia", "neurologia", "odontologia", "urologia",
+)  # "urologia" va última: "neurologia" la contiene y se tiene que reconocer antes
 
 SOLICITADO, PROPUESTO, CONFIRMADO, RECHAZADO, CANCELADO = (
     "solicitado", "propuesto", "confirmado", "rechazado", "cancelado",
 )
+
 ESTADOS = (SOLICITADO, PROPUESTO, CONFIRMADO, RECHAZADO, CANCELADO)
 
-# estado actual -> estados a los que puede pasar
+# Estado actual -> estados a los que puede pasar.
 TRANSICIONES = {
-    SOLICITADO: (PROPUESTO,),
+    SOLICITADO: (PROPUESTO, CANCELADO),
     PROPUESTO: (CONFIRMADO, RECHAZADO, CANCELADO),
-    CONFIRMADO: (CANCELADO,),     # historia 4: el administrativo puede suspender un turno
+    CONFIRMADO: (CANCELADO,),  # Historia 4: el administrativo puede suspender un turno.
     RECHAZADO: (),
     CANCELADO: (),
 }
@@ -31,15 +34,17 @@ def ahora_utc():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def nuevo_turno(paciente_id, especialidad, motivo, origen):
+def nuevo_turno(paciente_id, especialidad, motivo, origen, fecha_hora=None):
+    """Si el paciente ya eligió día y horario, el turno nace confirmado.
+    Si no, nace 'solicitado' y el administrativo propone la fecha (circuito original)."""
     return {
         "paciente_id": paciente_id,
         "medico_id": None,           # id del médico en usuarios; lo asigna el administrativo
         "especialidad": especialidad,
         "motivo": motivo,
         "origen": origen,            # "manual" | "voz"
-        "estado": SOLICITADO,
-        "fecha_hora": None,
+        "estado": CONFIRMADO if fecha_hora else SOLICITADO,
+        "fecha_hora": fecha_hora,
         "creado_en": ahora_utc(),
     }
 

@@ -28,6 +28,11 @@ class FakeTurnoRepository:
             filas = [f for f in filas if f["fecha_hora"] and f["fecha_hora"].date().isoformat() == fecha]
         return filas
 
+    def ocupados(self, especialidad, desde, hasta):
+        return [{"id": f["id"], "fecha_hora": f["fecha_hora"]} for f in self._filas.values()
+                if f["especialidad"] == especialidad and f["estado"] in ("propuesto", "confirmado")
+                and f["fecha_hora"] and desde <= f["fecha_hora"] <= hasta]
+
     def actualizar(self, turno_id, campos):
         self._filas[turno_id].update(campos)
         return self.obtener(turno_id)
