@@ -8,7 +8,8 @@ Flask + MySQL (PyMySQL / SQLAlchemy) en el backend, React + Vite + Axios en el f
 # 1. Base de datos (una sola vez)
 mysql -u root -p < database/mi_turno_a_mano.sql        # tablas turnos y notificaciones
 python database/init_db.py                             # tabla usuarios + admin y médico de prueba
-#    Si ya tenías la base del sprint 1: mysql -u root -p < database/migracion_sprint2.sql
+#    Si ya tenías la base del sprint 1: mysql -u root -p -e "source database/migracion_sprint2.sql"
+#    Para la historia 3 sobre una base existente: mysql -u root -p -e "source database/migracion_medicacion.sql"
 
 # 2. Backend
 cd backend
@@ -39,6 +40,9 @@ Todos exigen token (`Authorization: Bearer ...`). El backend valida el rol en ca
 | POST | /api/turnos/{id}/aviso (demora con minutos predefinidos) | administrativo |
 | POST | /api/turnos/{id}/recordatorio | administrativo |
 | GET | /api/medicos | administrativo |
+| GET | /api/pacientes?buscar= (DNI o nombre, mínimo 3 caracteres) | administrativo |
+| GET | /api/pacientes/{id}/medicacion | administrativo |
+| POST | /api/medicacion/{id}/recordatorio | administrativo |
 | GET | /api/notificaciones/mias | paciente |
 | PATCH | /api/notificaciones/{id}/leida | paciente (dueño del aviso) |
 
@@ -57,6 +61,15 @@ se puede reprogramar (vuelve a `propuesto`, el paciente acepta la nueva fecha) o
   y envía avisos de demora con mensajes predefinidos (`utils/mensajes.py`).
 - El paciente ve los avisos en la app (con contador de no leídos) y, si está configurado, por WhatsApp.
 - Los mensajes llevan solo especialidad, fecha y hora: nunca el motivo ni datos clínicos.
+
+## Historia 3: recordatorio de toma de medicación
+- El administrativo busca un paciente por DNI o nombre, ve su plan de medicación (una fila por toma:
+  medicamento, dosis y horario) y le envía el recordatorio de cada toma.
+- Tabla `plan_medicacion`: la escribe la historia 5 (el médico carga el plan). Mientras tanto se puede cargar un
+  plan ficticio con `python database\cargar_plan_prueba.py DNI_DEL_PACIENTE`.
+- Privacidad: el medicamento y la dosis son datos de salud. Dentro de la app el aviso lleva el detalle;
+  por WhatsApp sale solo un texto genérico (`mensaje_externo`), y los logs no guardan nombres de medicamentos.
+- Los avisos de medicación no están ligados a un turno: `notificaciones.turno_id` pasa a ser opcional.
 
 ## Seguridad
 Contraseñas con hash, bloqueo temporal tras 5 logins fallidos, tokens con vencimiento, roles validados en el backend,

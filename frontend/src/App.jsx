@@ -1,21 +1,28 @@
 
 import { useCallback, useEffect, useState } from "react";
+
 import Bienvenida from "./pages/Bienvenida/Bienvenida";
 import Login from "./pages/Auth/Login";
 import Registro from "./pages/Auth/Registro";
 import Inicio from "./pages/Inicio/Inicio";
+
 import SolicitarTurno from "./pages/Turnos/SolicitarTurno";
 import MisTurnos from "./pages/Turnos/MisTurnos";
 import Avisos from "./pages/Avisos/Avisos";
-import { obtenerAvisos } from "./api/turnosApi";
-import Cabecera from "./components/Cabecera";
-import "./App.css";
+
 import MiCuidador from "./pages/Cuidador/MiCuidador";
 import PanelCuidador from "./pages/Cuidador/PanelCuidador";
+
 import GestionTurnos from "./pages/Admin/GestionTurnos";
 import RecordatoriosMedicacion from "./pages/Admin/RecordatoriosMedicacion";
+
 import PanelRecetas from "./pages/Medico/PanelRecetas";
 import MiMedicacion from "./pages/Medicacion/MiMedicacion";
+
+import Cabecera from "./components/Cabecera";
+import { obtenerAvisos } from "./api/turnosApi";
+
+import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -39,9 +46,11 @@ function usuarioGuardado() {
 
 export default function App() {
   const [pantalla, setPantalla] = useState("inicio");
+
   const [autenticado, setAutenticado] = useState(
     !!localStorage.getItem("token")
   );
+
   const [vistaAuth, setVistaAuth] = useState("bienvenida");
 
   const [avisos, setAvisos] = useState([]);
@@ -50,12 +59,13 @@ export default function App() {
 
   const [iniciarPedidoPorVoz, setIniciarPedidoPorVoz] = useState(false);
 
-  // Datos para el ingreso del cuidador
+  // Datos para el ingreso del cuidador.
   const [dniPaciente, setDniPaciente] = useState("");
   const [codigoCuidador, setCodigoCuidador] = useState("");
   const [errorCuidador, setErrorCuidador] = useState("");
   const [cargandoCuidador, setCargandoCuidador] = useState(false);
 
+  // Cuenta los avisos del paciente.
   const contarAvisos = useCallback(() => {
     setAvisosCargados(false);
 
@@ -81,6 +91,7 @@ export default function App() {
     }
   }, [autenticado, pantalla, contarAvisos]);
 
+  // Navegación entre pantallas.
   const irA = (destino) => {
     setIniciarPedidoPorVoz(false);
     setPantalla(destino);
@@ -91,6 +102,7 @@ export default function App() {
     setPantalla("pedir");
   };
 
+  // Cierre de sesión.
   const cerrarSesion = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
@@ -109,12 +121,15 @@ export default function App() {
     setErrorCuidador("");
   };
 
+  // Inicio de sesión para cuidadores.
   const ingresarComoCuidador = async (e) => {
     e.preventDefault();
     setErrorCuidador("");
 
     if (!dniPaciente.trim() || !codigoCuidador.trim()) {
-      setErrorCuidador("Completá el DNI del paciente y el código.");
+      setErrorCuidador(
+        "Completá el DNI del paciente y el código."
+      );
       return;
     }
 
@@ -139,12 +154,16 @@ export default function App() {
 
       if (!respuesta.ok) {
         throw new Error(
-          datos.error || datos.mensaje || "No se pudo iniciar sesión."
+          datos.error ||
+          datos.mensaje ||
+          "No se pudo iniciar sesión."
         );
       }
 
       if (!datos.token || !datos.usuario) {
-        throw new Error("El servidor no devolvió los datos de acceso.");
+        throw new Error(
+          "El servidor no devolvió los datos de acceso."
+        );
       }
 
       const usuario = {
@@ -173,6 +192,7 @@ export default function App() {
     }
   };
 
+  // Si no hay sesión iniciada, muestra las pantallas de autenticación.
   if (!autenticado) {
     if (vistaAuth === "login") {
       return (
@@ -218,12 +238,15 @@ export default function App() {
                 <label htmlFor="dniPaciente">
                   DNI del paciente
                 </label>
+
                 <input
                   id="dniPaciente"
                   type="text"
                   inputMode="numeric"
                   value={dniPaciente}
-                  onChange={(e) => setDniPaciente(e.target.value)}
+                  onChange={(e) =>
+                    setDniPaciente(e.target.value)
+                  }
                   placeholder="Ingresá el DNI"
                   maxLength={8}
                   required
@@ -234,6 +257,7 @@ export default function App() {
                 <label htmlFor="codigoCuidador">
                   Código de acceso
                 </label>
+
                 <input
                   id="codigoCuidador"
                   type="text"
@@ -281,76 +305,111 @@ export default function App() {
       <Bienvenida
         irALogin={() => setVistaAuth("login")}
         irARegistro={() => setVistaAuth("registro")}
-        irALoginCuidador={() => setVistaAuth("loginCuidador")}
+        irALoginCuidador={() =>
+          setVistaAuth("loginCuidador")
+        }
       />
     );
   }
 
+  // Datos del usuario autenticado.
   const usuario = usuarioGuardado();
   const nombre = (usuario.nombre || "").split(" ")[0] || "";
 
+  // Panel del cuidador.
   if (usuario.rol === "cuidador") {
-  return (
-    <>
-      <Cabecera titulo="Mi Turno a Mano" />
-      <PanelCuidador onSalir={cerrarSesion} />
-    </>
-  );
-}
-
-if (usuario.rol === "medico") {
-  return (
-    <>
-      <Cabecera titulo="Panel médico" />
-      <PanelRecetas onSalir={cerrarSesion} />
-    </>
-  );
-}
-
-if (usuario.rol === "administrativo") {
-  if (pantalla === "admin_med") {
     return (
       <>
-        <Cabecera
-          titulo="Recordatorios"
-          onVolver={() => setPantalla("inicio")}
-        />
-        <RecordatoriosMedicacion onVolver={() => setPantalla("inicio")} />
+        <Cabecera titulo="Mi Turno a Mano" />
+        <PanelCuidador onSalir={cerrarSesion} />
       </>
     );
   }
-  if (pantalla === "admin_turnos" || pantalla === "inicio") {
+
+  // Panel del médico.
+  if (usuario.rol === "medico") {
     return (
       <>
-        <Cabecera titulo="Administración" />
-        {pantalla === "inicio" ? (
-          <main className="pantalla">
-            <p>Hola, {nombre || "bienvenido"}.</p>
-            <button type="button" className="btn" onClick={() => setPantalla("admin_turnos")}>
-              Gestión de turnos
-            </button>
-            <button type="button" className="btn btn-secundario" onClick={() => setPantalla("admin_med")}>
-              Recordatorios de medicación
-            </button>
-            <button type="button" className="btn btn-peligro" onClick={cerrarSesion}>
-              Cerrar sesión
-            </button>
-          </main>
-        ) : (
-          <>
+        <Cabecera titulo="Panel médico" />
+        <PanelRecetas onSalir={cerrarSesion} />
+      </>
+    );
+  }
+
+  // Panel del administrativo.
+  if (usuario.rol === "administrativo") {
+    if (pantalla === "admin_med") {
+      return (
+        <>
+          <Cabecera
+            titulo="Recordatorios"
+            onVolver={() => setPantalla("inicio")}
+          />
+
+          <RecordatoriosMedicacion
+            onVolver={() => setPantalla("inicio")}
+          />
+        </>
+      );
+    }
+
+    if (
+      pantalla === "admin_turnos" ||
+      pantalla === "inicio"
+    ) {
+      return (
+        <>
+          <Cabecera titulo="Administración" />
+
+          {pantalla === "inicio" ? (
             <main className="pantalla">
-              <button type="button" className="btn btn-secundario" onClick={() => setPantalla("inicio")}>
-                Menú administración
+              <p>Hola, {nombre || "bienvenido"}.</p>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setPantalla("admin_turnos")}
+              >
+                Gestión de turnos
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secundario"
+                onClick={() => setPantalla("admin_med")}
+              >
+                Recordatorios de medicación
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-peligro"
+                onClick={cerrarSesion}
+              >
+                Cerrar sesión
               </button>
             </main>
-            <GestionTurnos onSalir={cerrarSesion} />
-          </>
-        )}
-      </>
-    );
-  }
-}
+          ) : (
+            <>
+              <main className="pantalla">
+                <button
+                  type="button"
+                  className="btn btn-secundario"
+                  onClick={() => setPantalla("inicio")}
+                >
+                  Menú administración
+                </button>
+              </main>
 
+              <GestionTurnos onSalir={cerrarSesion} />
+            </>
+          )}
+        </>
+      );
+    }
+  }
+
+  // Pantalla principal del paciente.
   if (pantalla === "inicio") {
     return (
       <Inicio
@@ -365,6 +424,7 @@ if (usuario.rol === "administrativo") {
     );
   }
 
+  // Navegación de las demás pantallas del paciente.
   return (
     <>
       <Cabecera
@@ -377,7 +437,9 @@ if (usuario.rol === "administrativo") {
           onVerTurnos={() => irA("mios")}
           onInicio={() => irA("inicio")}
           iniciarConVoz={iniciarPedidoPorVoz}
-          onVozIniciada={() => setIniciarPedidoPorVoz(false)}
+          onVozIniciada={() =>
+            setIniciarPedidoPorVoz(false)
+          }
         />
       )}
 
@@ -396,12 +458,16 @@ if (usuario.rol === "administrativo") {
       )}
 
       {pantalla === "cuidador" && (
-  <MiCuidador onInicio={() => irA("inicio")} />
-)}
+        <MiCuidador
+          onInicio={() => irA("inicio")}
+        />
+      )}
+
       {pantalla === "medicacion" && (
-        <MiMedicacion onInicio={() => irA("inicio")} />
+        <MiMedicacion
+          onInicio={() => irA("inicio")}
+        />
       )}
     </>
   );
 }
-

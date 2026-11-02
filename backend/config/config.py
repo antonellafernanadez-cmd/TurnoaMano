@@ -1,4 +1,4 @@
-"""Lee las variables del archivo .env (ver .env.example).
+ """Lee las variables del archivo .env (ver .env.example).
 Acepta DB_* o MYSQL_* para los datos de MySQL.
 """
 

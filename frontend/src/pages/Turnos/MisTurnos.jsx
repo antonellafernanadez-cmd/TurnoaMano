@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -6,9 +7,15 @@ import {
 } from "../../api/turnosApi";
 import { fechaLarga } from "../../utils/fechas";
 import { hablar, callar, normalizarVoz } from "../../utils/voz";
+=======
+import { useEffect, useState } from "react";
+import { obtenerMisTurnos, responderTurno } from "../../api/turnosApi";
+import { ETIQUETA_ESTADO, fechaLegible } from "../../utils/formato";
+>>>>>>> origin/main
 import "./Turnos.css";
 import "./MisTurnos.css";
 
+<<<<<<< HEAD
 const ETIQUETA = {
   solicitado: "Esperando fecha",
   propuesto: "Tenés que responder",
@@ -28,6 +35,11 @@ const ESPECIALIDAD = {
   odontologia: { nombre: "Odontología", icono: "🦷" },
   urologia: { nombre: "Urología", icono: "💧" },
 };
+=======
+export default function MisTurnos() {
+  const [turnos, setTurnos] = useState([]);
+  const [error, setError] = useState("");
+>>>>>>> origin/main
 
 const obtenerEspecialidad = (clave) => {
   const normalizada = normalizarVoz(clave || "");
@@ -50,6 +62,7 @@ const esProximo = (turno) => {
   );
 };
 
+<<<<<<< HEAD
 const porFecha = (a, b) => {
   if (!a.fecha_hora) return 1;
   if (!b.fecha_hora) return -1;
@@ -279,6 +292,21 @@ export default function MisTurnos({ onPedir, onInicio }) {
           >
             Volver al inicio
           </button>
+=======
+      {turnos.map((t) => (
+        <section key={t.id} className="turno">
+          <h2>{t.especialidad}</h2>
+          <p className={`estado estado-${t.estado}`}>
+            {t.estado === "propuesto" ? "Tenés que responder" : ETIQUETA_ESTADO[t.estado]}
+          </p>
+          {t.fecha_hora && <p>{fechaLegible(t.fecha_hora)}</p>}
+          {t.estado === "propuesto" && (
+            <div className="acciones">
+              <button className="btn" onClick={() => responder(t.id, "aceptar")}>Aceptar</button>
+              <button className="btn btn-secundario" onClick={() => responder(t.id, "rechazar")}>Rechazar</button>
+            </div>
+          )}
+>>>>>>> origin/main
         </section>
       </main>
     );

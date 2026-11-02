@@ -6,7 +6,8 @@ avisa no necesita saber cómo funciona cada uno, y se puede sumar otro canal sin
   - notificacion: el diccionario de models/notificacion.py (con "mensaje")
 
 Privacidad: el mensaje solo lleva lo mínimo (especialidad, fecha y hora), sin datos clínicos,
-y los logs no guardan teléfonos ni mensajes."""
+y los logs no guardan teléfonos ni mensajes. Si el aviso trae "mensaje_externo" (por ejemplo, el de
+medicación), WhatsApp manda ese texto genérico y el detalle queda solo dentro de la app."""
 import base64
 import logging
 import re
@@ -80,7 +81,7 @@ class CanalWhatsApp:
             log.warning("whatsapp omitido: teléfono no válido paciente=%s", destinatario.get("identificador"))
             return False
         url = f"https://api.twilio.com/2010-04-01/Accounts/{self._cuenta}/Messages.json"
-        datos = {"From": self._origen, "To": f"whatsapp:{numero}", "Body": notificacion["mensaje"]}
+        datos = {"From": self._origen, "To": f"whatsapp:{numero}", "Body": notificacion.get("mensaje_externo") or notificacion["mensaje"]}
         try:
             self._transporte(url, datos, self._cuenta, self._token)
         except Exception as e:             # un canal que falla no debe romper el resto del aviso

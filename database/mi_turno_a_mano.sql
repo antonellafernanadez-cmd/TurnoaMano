@@ -1,5 +1,6 @@
+
 -- Mi Turno a Mano - base de datos (MySQL)
--- La tabla usuarios se crea mediante database/init_db.py (SQLAlchemy).
+-- La tabla usuarios se crea mediante database/init_db.py.
 -- Los turnos y las notificaciones se crean desde este archivo.
 --
 -- Ejecutar:
@@ -46,18 +47,20 @@ CREATE TABLE IF NOT EXISTS turnos (
 -- =====================================================
 -- TABLA: NOTIFICACIONES
 -- Almacena los avisos enviados a los pacientes.
+-- turno_id puede ser NULL para avisos que no pertenecen
+-- a un turno, como los recordatorios de medicación.
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS notificaciones (
     id          INT AUTO_INCREMENT PRIMARY KEY,
-    paciente_id VARCHAR(20)  NOT NULL,
-    turno_id    INT          NULL,
+    paciente_id VARCHAR(20) NOT NULL,
+    turno_id    INT NULL,
     tipo        ENUM(
         'fecha_propuesta',
         'recordatorio',
         'cambio',
         'confirmacion',
-        "medicacion"
+        'medicacion'
     ) NOT NULL,
     mensaje     VARCHAR(500) NOT NULL,
     leida       TINYINT(1) NOT NULL DEFAULT 0,
@@ -72,34 +75,56 @@ CREATE TABLE IF NOT EXISTS notificaciones (
 ) ENGINE=InnoDB;
 
 
--- Sprint 2 HU3/HU5
+-- =====================================================
+-- TABLA: PLAN DE MEDICACIÓN
+-- Historia 3 HU3/HU5.
+-- Una fila por toma de medicación.
+-- =====================================================
+
 CREATE TABLE IF NOT EXISTS plan_medicacion (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id VARCHAR(20) NOT NULL,
     medicamento VARCHAR(80) NOT NULL,
     dosis       VARCHAR(60) NOT NULL,
-    horario     CHAR(5)     NOT NULL,
-    activo      TINYINT(1)  NOT NULL DEFAULT 1,
-    creado_en   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    horario     CHAR(5) NOT NULL,
+    activo      TINYINT(1) NOT NULL DEFAULT 1,
+    creado_en   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     INDEX idx_paciente_activo (paciente_id, activo)
-);
+) ENGINE=InnoDB;
+
+
+-- =====================================================
+-- TABLA: RECETAS
+-- =====================================================
 
 CREATE TABLE IF NOT EXISTS recetas (
     id            INT AUTO_INCREMENT PRIMARY KEY,
-    paciente_id   VARCHAR(20)  NOT NULL,
-    medico_id     VARCHAR(20)  NOT NULL,
+    paciente_id   VARCHAR(20) NOT NULL,
+    medico_id     VARCHAR(20) NOT NULL,
     indicaciones  VARCHAR(500) NOT NULL DEFAULT '',
-    activa        TINYINT(1)   NOT NULL DEFAULT 1,
-    creado_en     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    activa        TINYINT(1) NOT NULL DEFAULT 1,
+    creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     INDEX idx_recetas_paciente (paciente_id),
     INDEX idx_recetas_medico (medico_id)
-);
+) ENGINE=InnoDB;
+
+
+-- =====================================================
+-- TABLA: ELEMENTOS DE LAS RECETAS
+-- =====================================================
 
 CREATE TABLE IF NOT EXISTS receta_items (
-    id            INT AUTO_INCREMENT PRIMARY KEY,
-    receta_id     INT          NOT NULL,
-    medicamento   VARCHAR(80)  NOT NULL,
-    dosis         VARCHAR(60)  NOT NULL,
-    horario       CHAR(5)      NOT NULL,
-    CONSTRAINT fk_receta_items_receta FOREIGN KEY (receta_id) REFERENCES recetas(id) ON DELETE CASCADE
-);
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    receta_id   INT NOT NULL,
+    medicamento VARCHAR(80) NOT NULL,
+    dosis       VARCHAR(60) NOT NULL,
+    horario     CHAR(5) NOT NULL,
+
+    CONSTRAINT fk_receta_items_receta
+        FOREIGN KEY (receta_id)
+        REFERENCES recetas(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
