@@ -72,7 +72,7 @@ def _buscar_pacientes(texto):
         .all()
     )
     return [
-        {"id": str(u.id), "nombre": u.nombre, "identificador": u.identificador}
+        {"id": u.identificador, "nombre": u.nombre, "identificador": u.identificador}
         for u in filas
     ]
 
