@@ -19,3 +19,13 @@ def mensaje_reprogramado(turno):
 def mensaje_suspendido(turno):
     return (f"Tu turno de {turno['especialidad']} del {fecha_legible(turno['fecha_hora'])} fue suspendido. "
             "Te avisamos cuando haya una nueva fecha.")
+
+
+# ---- Historia 3: recordatorio de toma de medicación ----
+# El detalle (medicamento y dosis) es un dato de salud: va solo dentro de la app.
+# Por canales externos (WhatsApp) sale el texto genérico.
+MENSAJE_MEDICACION_EXTERNO = "Tenés un recordatorio de medicación. Mirá el detalle en la app Mi Turno a Mano."
+
+
+def mensaje_medicacion(item):
+    return f"Recordatorio de medicación: tomá {item['medicamento']}, {item['dosis']}, a las {item['horario']}."

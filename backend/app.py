@@ -29,7 +29,18 @@ def _listar_medicos():
     return [{"id": str(m.id), "nombre": m.nombre} for m in medicos]
 
 
-def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, canales_extra=None, medicos=None):
+def _buscar_pacientes(texto):
+    """Pacientes por DNI o nombre (máximo 20). Devuelve solo id, nombre y DNI: nada de teléfonos."""
+    from models.usuario import Usuario
+    filas = (Usuario.query.filter(Usuario.rol == "paciente",
+                                  db.or_(Usuario.identificador.contains(texto, autoescape=True),
+                                         Usuario.nombre.contains(texto, autoescape=True)))
+             .order_by(Usuario.nombre).limit(20).all())
+    return [{"id": str(u.id), "nombre": u.nombre, "identificador": u.identificador} for u in filas]
+
+
+def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, canales_extra=None, medicos=None,
+               plan_repo=None, pacientes=None):
     """PATRÓN FACTORY: create_app arma la aplicación; los tests le inyectan
     repositorios y canales falsos.
 
@@ -71,8 +82,15 @@ def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, cana
                                             destinatarios or _buscar_destinatario)
 
     app.config["MEDICOS"] = medicos or _listar_medicos
+    app.config["PACIENTES"] = pacientes or _buscar_pacientes
+
+    if plan_repo is None:
+        from repositories.plan_medicacion_repository import PlanMedicacionRepository
+        plan_repo = PlanMedicacionRepository()
+    app.config["PLAN_REPO"] = plan_repo
 
     from events import suscriptores  # noqa: F401  (registra los avisos automáticos en el bus de eventos)
+    from routes.medicacion_routes import medicacion_bp
     from routes.medico_routes import medicos_bp
     from routes.notificacion_routes import notificaciones_bp
     from routes.turno_routes import turnos_bp
@@ -80,6 +98,7 @@ def create_app(turno_repo=None, notificacion_repo=None, destinatarios=None, cana
     app.register_blueprint(turnos_bp)
     app.register_blueprint(notificaciones_bp)
     app.register_blueprint(medicos_bp)
+    app.register_blueprint(medicacion_bp)
     registrar_errores(app)
 
     @app.get("/api/health")

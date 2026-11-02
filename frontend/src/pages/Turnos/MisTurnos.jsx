@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { obtenerMisTurnos, responderTurno } from "../../api/turnosApi";
+import { ETIQUETA_ESTADO, fechaLegible } from "../../utils/formato";
 import "./Turnos.css";
-
-const ETIQUETA = {
-  solicitado: "Esperando fecha",
-  propuesto: "Tenés que responder",
-  confirmado: "Confirmado",
-  rechazado: "Rechazado",
-};
 
 export default function MisTurnos() {
   const [turnos, setTurnos] = useState([]);
@@ -29,8 +23,10 @@ export default function MisTurnos() {
       {turnos.map((t) => (
         <section key={t.id} className="turno">
           <h2>{t.especialidad}</h2>
-          <p className={`estado estado-${t.estado}`}>{ETIQUETA[t.estado]}</p>
-          {t.fecha_hora && <p>{new Date(t.fecha_hora).toLocaleString("es-AR", { dateStyle: "full", timeStyle: "short" })}</p>}
+          <p className={`estado estado-${t.estado}`}>
+            {t.estado === "propuesto" ? "Tenés que responder" : ETIQUETA_ESTADO[t.estado]}
+          </p>
+          {t.fecha_hora && <p>{fechaLegible(t.fecha_hora)}</p>}
           {t.estado === "propuesto" && (
             <div className="acciones">
               <button className="btn" onClick={() => responder(t.id, "aceptar")}>Aceptar</button>

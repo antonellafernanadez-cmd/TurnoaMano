@@ -21,10 +21,23 @@ CREATE TABLE IF NOT EXISTS turnos (
 CREATE TABLE IF NOT EXISTS notificaciones (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id VARCHAR(20)  NOT NULL,
-    turno_id    INT          NOT NULL,
-    tipo        ENUM('fecha_propuesta','recordatorio','cambio') NOT NULL,
+    turno_id    INT          NULL,          -- NULL en avisos que no son de un turno (medicación)
+    tipo        ENUM('fecha_propuesta','recordatorio','cambio','medicacion') NOT NULL,
     mensaje     VARCHAR(500) NOT NULL,
     leida       TINYINT(1)   NOT NULL DEFAULT 0,
     creado_en   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_paciente_leida (paciente_id, leida)
+);
+
+-- Historia 3: una fila por toma (un medicamento, su dosis y el horario).
+-- Lo escribe la historia 5 (el médico carga el plan); acá solo se consulta y se avisa.
+CREATE TABLE IF NOT EXISTS plan_medicacion (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    paciente_id VARCHAR(20) NOT NULL,
+    medicamento VARCHAR(80) NOT NULL,
+    dosis       VARCHAR(60) NOT NULL,
+    horario     CHAR(5)     NOT NULL,           -- 'HH:MM'
+    activo      TINYINT(1)  NOT NULL DEFAULT 1,
+    creado_en   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_paciente_activo (paciente_id, activo)
 );
