@@ -55,6 +55,28 @@ def _listar_medicos():
     ]
 
 
+def _buscar_pacientes(texto):
+    """Pacientes por DNI o nombre (máximo 20)."""
+    from models.usuario import Usuario
+    from models.db import db
+    filas = (
+        Usuario.query.filter(
+            Usuario.rol == "paciente",
+            db.or_(
+                Usuario.identificador.contains(texto, autoescape=True),
+                Usuario.nombre.contains(texto, autoescape=True),
+            ),
+        )
+        .order_by(Usuario.nombre)
+        .limit(20)
+        .all()
+    )
+    return [
+        {"id": str(u.id), "nombre": u.nombre, "identificador": u.identificador}
+        for u in filas
+    ]
+
+
 def create_app(
     turno_repo=None,
     notificacion_repo=None,
@@ -122,6 +144,12 @@ def create_app(
     )
 
     app.config["MEDICOS"] = medicos or _listar_medicos
+    app.config["PACIENTES"] = _buscar_pacientes
+
+    from repositories.plan_medicacion_repository import PlanMedicacionRepository
+    from repositories.receta_repository import RecetaRepository
+    app.config["PLAN_REPO"] = PlanMedicacionRepository()
+    app.config["RECETA_REPO"] = RecetaRepository()
 
     # Registra los avisos automáticos en el bus de eventos.
     from events import suscriptores  # noqa: F401
@@ -129,11 +157,13 @@ def create_app(
     from routes.medico_routes import medicos_bp
     from routes.notificacion_routes import notificaciones_bp
     from routes.turno_routes import turnos_bp
+    from routes.medicacion_routes import medicacion_bp
     from utils.errores import registrar_errores
 
     app.register_blueprint(turnos_bp)
     app.register_blueprint(notificaciones_bp)
     app.register_blueprint(medicos_bp)
+    app.register_blueprint(medicacion_bp)
 
     registrar_errores(app)
 
@@ -156,6 +186,8 @@ def verificar_base(app):
         ),
         "turnos": "SELECT id FROM turnos LIMIT 1",
         "notificaciones": "SELECT id FROM notificaciones LIMIT 1",
+        "plan_medicacion": "SELECT id FROM plan_medicacion LIMIT 1",
+        "recetas": "SELECT id FROM recetas LIMIT 1",
     }
 
     with app.app_context():

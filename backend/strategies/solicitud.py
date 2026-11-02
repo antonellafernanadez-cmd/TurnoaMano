@@ -14,13 +14,13 @@ def _normalizar(texto):
 # Se busca cada palabra dentro de la frase (ya sin tildes ni mayúsculas).
 PALABRAS_CLAVE = {
     "clinica medica": ("clinica", "clinico", "cabecera", "medico general", "general"),
-    "cardiologia": ("cardio", "corazon"),
+    "cardiologia": ("cardio", "cardiologo", "corazon"),
     "traumatologia": ("trauma", "hueso", "fractura", "rodilla", "columna"),
-    "oftalmologia": ("oftalmo", "oculista", "ojo", "vista"),
+    "oftalmologia": ("oftalmo", "oftalmologo", "oculista", "ojo", "vista"),
     "dermatologia": ("dermato", "piel"),
     "ginecologia": ("gineco",),
     "neurologia": ("neuro",),
-    "odontologia": ("odonto", "dentista", "diente", "muela"),
+    "odontologia": ("odonto", "odontologo", "dentista", "diente", "muela", "muelas"),
     "urologia": ("urolog", "prostata", "rinon"),   # va después de neurologia (que contiene "urolog")
 }
 

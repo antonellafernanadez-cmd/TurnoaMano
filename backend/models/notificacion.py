@@ -1,18 +1,14 @@
-"""Modelo de Notificación: los avisos que recibe el paciente (historias de usuario 2 y 4).
-La tabla está en database/mi_turno_a_mano.sql."""
+"""Modelo de Notificación (HU2, HU3, HU4)."""
 from models.turno import ahora_utc
 
 FECHA_PROPUESTA = "fecha_propuesta"
 CONFIRMACION = "confirmacion"
 RECORDATORIO = "recordatorio"
 CAMBIO = "cambio"
+MEDICACION = "medicacion"
 
-TIPOS = (
-    FECHA_PROPUESTA,
-    CONFIRMACION,
-    RECORDATORIO,
-    CAMBIO
-)
+TIPOS = (FECHA_PROPUESTA, CONFIRMACION, RECORDATORIO, CAMBIO, MEDICACION)
+
 
 def nueva_notificacion(paciente_id, turno_id, tipo, mensaje):
     return {

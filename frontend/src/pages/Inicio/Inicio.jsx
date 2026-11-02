@@ -456,6 +456,26 @@ export default function Inicio({
 
       <button
         type="button"
+        className="banda"
+        onClick={() => irA("medicacion")}
+      >
+        <span className="banda-icono" aria-hidden="true">
+          💊
+        </span>
+        <span>
+          Mi medicación
+          <br />
+          <small className="banda-chico">
+            Plan de tomas y recetas digitales
+          </small>
+        </span>
+        <span className="banda-flecha" aria-hidden="true">
+          ›
+        </span>
+      </button>
+
+      <button
+        type="button"
         className="banda banda-violeta"
         onClick={() => irA("cuidador")}
       >

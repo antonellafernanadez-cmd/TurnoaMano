@@ -19,3 +19,11 @@ def mensaje_reprogramado(turno):
 def mensaje_suspendido(turno):
     return (f"Tu turno de {turno['especialidad']} del {fecha_legible(turno['fecha_hora'])} fue suspendido. "
             "Te avisamos cuando haya una nueva fecha.")
+
+
+# ---- Historia 3: recordatorio de toma de medicación ----
+MENSAJE_MEDICACION_EXTERNO = "Tenés un recordatorio de medicación. Mirá el detalle en la app Mi Turno a Mano."
+
+
+def mensaje_medicacion(item):
+    return f"Recordatorio de medicación: tomá {item['medicamento']}, {item['dosis']}, a las {item['horario']}."
