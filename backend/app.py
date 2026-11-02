@@ -39,7 +39,7 @@ def _buscar_destinatario(paciente_id):
 
 
 def _listar_medicos():
-    """Médicos para asignar a los turnos: solo id y nombre."""
+    """Médicos para asignar a los turnos: id = matrícula (identificador)."""
     from models.usuario import Usuario
 
     medicos = (
@@ -50,7 +50,7 @@ def _listar_medicos():
     )
 
     return [
-        {"id": str(m.id), "nombre": m.nombre}
+        {"id": m.identificador, "nombre": m.nombre}
         for m in medicos
     ]
 
