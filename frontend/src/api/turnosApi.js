@@ -1,4 +1,4 @@
-```javascript
+
 import client from "./client";
 
 // =====================================================
@@ -75,4 +75,3 @@ export const suspenderTurno = (id) =>
 // Avisar al paciente sobre una demora.
 export const avisarDemora = (id, minutos) =>
   client.post(`/turnos/${id}/aviso`, { minutos }).then((r) => r.data);
-```

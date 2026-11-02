@@ -1,5 +1,6 @@
+
 """Crea las tablas y carga usuarios ficticios (solo para desarrollo).
-Ejecutar desde la raíz del repo:  python database\\init_db.py
+Ejecutar desde la raíz del repo: python database\\init_db.py
 """
 import os
 import sys
@@ -11,6 +12,7 @@ from werkzeug.security import generate_password_hash
 from app import create_app
 from models.db import db
 from models.usuario import Usuario
+from models.cuidador import Cuidador  # Registra el modelo antes de create_all.
 
 USUARIOS = [
     ("administrativo", "Admin Prueba", "2610000001", "admin@test.com", "1001", "admin12345"),
@@ -21,10 +23,12 @@ app = create_app()
 
 with app.app_context():
     db.create_all()
+
     for rol, nombre, telefono, email, identificador, password in USUARIOS:
         if Usuario.query.filter_by(identificador=identificador).first():
             print(f"Ya existía: {rol} ({identificador})")
             continue
+
         db.session.add(Usuario(
             nombre=nombre,
             telefono=telefono,
@@ -33,5 +37,6 @@ with app.app_context():
             password_hash=generate_password_hash(password),
             rol=rol,
         ))
+
         db.session.commit()
         print(f"Creado: {rol} ({identificador})")
