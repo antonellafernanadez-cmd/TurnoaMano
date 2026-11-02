@@ -184,10 +184,13 @@ def verificar_base(app):
         "usuarios (con intentos_fallidos y bloqueado_hasta)": (
             "SELECT id, intentos_fallidos, bloqueado_hasta FROM usuarios LIMIT 1"
         ),
-        "turnos": "SELECT id FROM turnos LIMIT 1",
+        "turnos (con medico_id)": (
+            "SELECT id, medico_id FROM turnos LIMIT 1"
+        ),
         "notificaciones": "SELECT id FROM notificaciones LIMIT 1",
         "plan_medicacion": "SELECT id FROM plan_medicacion LIMIT 1",
         "recetas": "SELECT id FROM recetas LIMIT 1",
+        "receta_items": "SELECT id FROM receta_items LIMIT 1",
     }
 
     with app.app_context():
@@ -200,7 +203,7 @@ def verificar_base(app):
 
                 print(
                     f"\n[ERROR] La base '{Config.DB_NAME}' no está lista: "
-                    f"falta la tabla {nombre}."
+                    f"falta la tabla o columna {nombre}."
                 )
                 print(
                     "        Ejecutá database/mi_turno_a_mano.sql "
