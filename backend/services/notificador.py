@@ -12,7 +12,7 @@ class Notificador:
         self._canales = canales
         self._buscar_destinatario = buscar_destinatario   # función: paciente_id -> {"identificador", "telefono"} o None
 
-    def avisar(self, paciente_id, turno_id, tipo, mensaje):
+    def avisar(self, paciente_id, turno_id, tipo, mensaje, mensaje_externo=None):
         """Devuelve {nombre_del_canal: True/False}. Que un canal falle no frena a los demás."""
         destinatario = self._buscar_destinatario(paciente_id)
         if not destinatario:
@@ -20,7 +20,8 @@ class Notificador:
             return {}
         resultados = {}
         for canal in self._canales:
-            aviso = nueva_notificacion(paciente_id, turno_id, tipo, mensaje)
+            texto = mensaje_externo if (mensaje_externo and canal.nombre != "app") else mensaje
+            aviso = nueva_notificacion(paciente_id, turno_id, tipo, texto)
             try:
                 resultados[canal.nombre] = bool(canal.enviar(destinatario, aviso))
             except Exception as e:
